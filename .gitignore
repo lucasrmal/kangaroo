@@ -2,6 +2,11 @@
 **/*.pro.user
 
 ## Build results
+Kangaroo/bin/
+Kangaroo/lib/
 **/build/**
 **/Makefile 
 **/*.so
+
+## Other stuff
+cloc-1.62.pl
