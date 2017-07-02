@@ -1,0 +1,188 @@
+<? 	  
+	main_cur = Settings.tr_account.currency;
+
+	payees = new PayeeManager();
+	toplevel = new Account();
+
+	function printSplit(_account, _amount)
+	{
+		if (_account == -1)
+		{
+			acct = Settings.tr_account;
+		}
+		else
+		{
+			acct = toplevel.account(_account);
+		}
+		?>
+		<td><? print(_account == -1 ? "<< Split >>" : acct.name); ?></td>
+		<td class="amt"><? if (_amount > 0) print(acct.formatAmount(_amount)); ?></td>
+		<td class="amt"><? if (_amount < 0) print(acct.formatAmount(-_amount)); ?></td> <?
+	}
+	  
+	  
+	  
+	  ?> 
+<html>
+<head>
+	<title><? print("List of transactions"); ?></title>
+	
+	<style>
+	
+	table
+	{
+		font-size: 14px;
+		border-spacing:0px;
+		width:100%;
+	}
+	
+	td.amt
+	{
+		text-align: right;
+		vertical-align:bottom;
+	}
+	
+	th
+	{
+		text-align:left;
+	}
+	
+	th.amt
+	{
+		text-align:right;
+	}
+	
+	td, th
+	{
+		padding:4px;
+	}
+	
+	td.main
+	{
+		vertical-align:top;
+	}
+	
+	.balance
+	{
+		vertical-align:bottom;
+		text-align:right;
+		border-left: solid 1px black;
+	}
+	
+	tr.first td
+	{
+		border-top: solid 1px black;
+	}
+	
+	td.opening
+	{
+		text-align: center;
+		font-style: italic;
+	}
+	
+	</style>
+	
+</head>
+<body>
+	<h1><? print("List of transactions"); ?></h1>
+	
+	<h2><? print(Settings.tr_account.name); ?></h2>
+	
+	<p>From <? print(Settings.begin_date.toDateString()); ?> to <? print(Settings.end_date.toDateString()); ?><!--, all amounts in <? print(main_cur); ?>--></p>
+	
+	<table>
+		<tr>
+			<th width="15%">Date</th>
+			<th width="35%">Description</th>
+			<th width="12%">Payee</th>
+			<th width="15%">Transfer</th>
+			<th class="amt" width="8%">Debit</th>
+			<th class="amt" width="8%">Credit</th>
+			<th class="balance" width="12%">Balance</th>
+		</tr>
+		<? trans = Settings.tr_account.ledger().transactionsBetween(Settings.begin_date, Settings.end_date);
+		
+		   var dateBefore = Settings.begin_date;
+		   dateBefore.setDate(dateBefore.getDate()-1);
+		   
+		   var balance = Settings.tr_account.ledger().balanceAt(dateBefore);
+		   
+		   if (Settings.show_closeopen)
+		   {
+			   ?>
+			   <tr>
+				<td colspan="6" class="opening">Opening Balance</td>
+				<td class="balance"><? print(Settings.tr_account.formatAmount(balance)); ?></td>
+			   </tr>
+			   <?
+		   }
+		
+		   for (var i = 0; i < trans.length; ++i) { ?>
+			   
+			<tr class="first">
+				<?  
+					var thesplits = [];	
+					var total = 0;
+					var idTransfer = 0;
+					var numSplits = 0;
+					
+					for (var j = 0; j < trans[i].splitCount; ++j)
+					{
+						if (toplevel.account(trans[i].split(j).idAccount).type != 6) //No trading acct.
+						{
+							if (trans[i].split(j).idAccount != Settings.tr_account.id)
+							{
+								idTransfer = trans[i].split(j).idAccount;
+							}
+							else
+							{
+								total += trans[i].split(j).amount;
+							}
+							
+							thesplits[thesplits.length] = trans[i].split(j);
+						}
+					}
+					
+					balance += total;
+					
+					if (thesplits.length == 2)
+					{
+						numSplits = 1;
+						thesplits = [];
+					}
+					else
+					{
+						numSplits = thesplits.length;
+					}
+				?>
+				<td class="main" rowspan="<? print(numSplits); ?>"><? print(trans[i].date.toDateString()); ?></td>
+				<td class="main" rowspan="<? print(numSplits); ?>"><? print(trans[i].memo); ?></td>
+				<td class="main" rowspan="<? print(numSplits); ?>"><? print(trans[i].idPayee != -1 ? payees.get(trans[i].idPayee).name : ""); ?></td>
+				
+				<? if (numSplits > 1) 
+				{
+					printSplit(-1, total);
+				}
+				else
+				{
+					printSplit(idTransfer, total);
+				} ?>
+				
+				<td class="balance" rowspan="<? print(numSplits); ?>"><? print(Settings.tr_account.formatAmount(balance)); ?></td>
+				
+			</tr>
+			
+			<? for (var j = 0; j < thesplits.length; ++j)
+			   { 
+				   if (thesplits[j].idAccount != Settings.tr_account.id)
+				   {
+						?><tr>
+						<? printSplit(thesplits[j].idAccount, thesplits[j].amount); ?></tr><?
+				   }
+			   }?>
+			   
+		<? } //for each transaction ?>
+	</table>
+
+</body>
+</html>

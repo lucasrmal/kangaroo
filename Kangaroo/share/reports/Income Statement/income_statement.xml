@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+	<name>Income Statement by Year</name>
+	<description>Income Statement by Year, including the year and the two previous years.</description>
+	<version>1.0</version>
+	<icon>income-account</icon>
+	<author>Lucas Rioux-Maldague</author>
+	<content>income_statement.kreport</content>
+	
+	<settings>
+		<setting type="year" description="Year of the report" codeid="report_year" default="CURRENT_YEAR" />
+		<setting type="integer" description="Number of previous years" codeid="num_previous" default="2" />
+		<!--setting type="list" choices="ttt,sss,eee" description="Test" codeid="test" default="sss" /-->
+	</settings>
+</report>
+

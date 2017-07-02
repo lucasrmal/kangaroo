@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+	<name>Income Statement by Month</name>
+	<description>Income Statement by Month.</description>
+	<version>1.0</version>
+	<icon>income-account</icon>
+	<author>Lucas Rioux-Maldague</author>
+	<content>income_statement_month.kreport</content>
+	
+	<settings>
+		<setting type="year" description="Last year" codeid="report_year" default="CURRENT_YEAR" />
+		<setting type="month" description="Last month" codeid="report_month" default="CURRENT_MONTH" />
+		<setting type="integer" description="Number of months" codeid="num_previous" default="12" />
+	</settings>
+</report>
+

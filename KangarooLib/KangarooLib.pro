@@ -1,0 +1,220 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2014-07-09T08:38:55
+#
+#-------------------------------------------------
+QMAKE_CXXFLAGS += -std=c++11
+
+TARGET = kangaroo
+
+TEMPLATE = lib
+CONFIG += dll
+DESTDIR = ../Kangaroo/lib
+
+VERSION = 0.1
+OBJECTS_DIR = build/obj
+MOC_DIR = build/moc
+UI_DIR = build/ui
+
+DEFINES += KANGAROOLIB_LIBRARY
+QT += widgets script printsupport
+
+INCLUDEPATH += /usr/local/include /include
+
+FORMS += ui/actionmanager/qttoolbardialog.ui
+
+SOURCES += \
+    model/account.cpp \
+    model/institution.cpp \
+    model/stored.cpp \
+    model/payee.cpp \
+    model/transaction.cpp \
+    model/transactionmanager.cpp \
+    model/security.cpp \
+    controller/payeecontroller.cpp \
+    controller/institutioncontroller.cpp \
+    model/ledger.cpp \
+    controller/accountcontroller.cpp \
+    controller/io.cpp \
+    ui/actionmanager/actioncontainer.cpp \
+    ui/actionmanager/actionmanager.cpp \
+    ui/actionmanager/command.cpp \
+    ui/actionmanager/qttoolbardialog.cpp \
+    ui/dialogs/settingsdialogs/generalsettings.cpp \
+    ui/dialogs/settingsdialogs/keyshortcutssettings.cpp \
+    ui/dialogs/camsegdialog.cpp \
+    ui/dialogs/frmdaterange.cpp \
+    ui/dialogs/isaveposition.cpp \
+    ui/widgets/amountedit.cpp \
+    ui/widgets/filechooserbox.cpp \
+    ui/widgets/shortcuteditor.cpp \
+    ui/core.cpp \
+    ui/mainwindow.cpp \
+    ui/settingsmanager.cpp \
+    model/currency.cpp \
+    model/modelexception.cpp \
+    model/properties.cpp \
+    klib.cpp \
+    ui/widgets/ledgerwidget.cpp \
+    ui/widgets/accountselector.cpp \
+    controller/currencycontroller.cpp \
+    controller/securitycontroller.cpp \
+    model/pricemanager.cpp \
+    ui/dialogs/spliteditor.cpp \
+    ui/widgets/splitswidget.cpp \
+    util/array.cpp \
+    util/ArrayDeque.cpp \
+    util/BinarySearchTree.cpp \
+    util/BinaryTree.cpp \
+    util/Treap.cpp \
+    util/utils.cpp \
+    controller/pricecontroller.cpp \
+    controller/onlinequotes.cpp \
+    ui/dialogs/formcurrencyexchange.cpp \
+    controller/scriptengine.cpp \
+    controller/ledger/investmentledgercontroller.cpp \
+    ui/widgets/pdfviewer.cpp \
+    controller/reportgenerator.cpp \
+    ui/widgets/chart.cpp \
+    ui/widgets/calculator.cpp \
+    ui/dockwidgetmanager.cpp \
+    ui/widgets/calculatordock.cpp \
+    controller/archive.cpp \
+    model/picturemanager.cpp \
+    controller/picturecontroller.cpp \
+    ui/dialogs/formpicturemanager.cpp \
+    ui/widgets/pictureselector.cpp \
+    controller/ledger/ledgercontrollermanager.cpp \
+    controller/ledger/ledgercontroller.cpp \
+    controller/ledger/genericledgercontroller.cpp \
+    ui/dialogs/formaboutplugins.cpp \
+    ui/dialogs/formabout.cpp \
+    controller/schedulecontroller.cpp \
+    model/schedule.cpp \
+    controller/simpleaccountcontroller.cpp \
+    model/documentmanager.cpp \
+    controller/ledger/brokerageledgercontroller.cpp \
+    model/investmenttransaction.cpp \
+    amount.cpp \
+    model/investmentlotsmanager.cpp \
+    ui/dialogs/formdistributioncomposition.cpp \
+    ui/dialogs/formgainlosswizard.cpp \
+    ui/widgets/splitfractionwidget.cpp \
+    util/balances.cpp \
+    ui/dialogs/optionsdialog.cpp \
+    ui/dialogs/formeditschedule.cpp \
+    controller/ledger/ledgertransactioncache.cpp \
+    ui/widgets/percchart.cpp \
+    controller/indexcontroller.cpp \
+    ui/dialogs/formeditattachments.cpp \
+    ui/widgets/returnchart.cpp \
+    ui/dialogs/formsettings.cpp \
+    ui/dialogs/settingsdialogs/ledgersettings.cpp \
+    ui/widgets/dateintervalselector.cpp \
+    ui/dialogs/formmultiinvestmententry.cpp \
+    model/budget.cpp
+
+HEADERS += \
+    model/account.h \
+    amount.h \
+    amount.hpp \
+    model/institution.h \
+    model/stored.h \
+    klib.h \
+    model/payee.h \
+    model/transaction.h \
+    model/transactionmanager.h \
+    model/security.h \
+    controller/payeecontroller.h \
+    controller/institutioncontroller.h \
+    model/ledger.h \
+    controller/accountcontroller.h \
+    controller/io.h \
+    ui/actionmanager/actioncontainer.h \
+    ui/actionmanager/actionmanager.h \
+    ui/actionmanager/command.h \
+    ui/actionmanager/qttoolbardialog.h \
+    ui/dialogs/settingsdialogs/generalsettings.h \
+    ui/dialogs/settingsdialogs/keyshortcutssettings.h \
+    ui/dialogs/camsegdialog.h \
+    ui/dialogs/frmdaterange.h \
+    ui/dialogs/isaveposition.h \
+    ui/widgets/amountedit.h \
+    ui/widgets/filechooserbox.h \
+    ui/widgets/shortcuteditor.h \
+    ui/core.h \
+    iplugin.h \
+    ui/mainwindow.h \
+    ui/settingsmanager.h \
+    model/currency.h \
+    model/modelexception.h \
+    model/properties.h \
+    ui/widgets/ledgerwidget.h \
+    ui/widgets/accountselector.h \
+    controller/currencycontroller.h \
+    controller/securitycontroller.h \
+    model/pricemanager.h \
+    ui/dialogs/spliteditor.h \
+    ui/widgets/splitswidget.h \
+    interfaces/iquote.h \
+    util/array.h \
+    util/ArrayDeque.h \
+    util/BinarySearchTree.h \
+    util/BinaryTree.h \
+    util/Treap.h \
+    util/utils.h \
+    util/treapmap.h \
+    controller/pricecontroller.h \
+    controller/onlinequotes.h \
+    ui/dialogs/formcurrencyexchange.h \
+    controller/scriptengine.h \
+    interfaces/scriptable.h \
+    controller/ledger/investmentledgercontroller.h \
+    ui/widgets/pdfviewer.h \
+    controller/reportgenerator.h \
+    ui/widgets/chart.h \
+    ui/widgets/calculator.h \
+    ui/dockwidgetmanager.h \
+    ui/widgets/calculatordock.h \
+    interfaces/ifilemanager.h \
+    controller/archive.h \
+    model/picturemanager.h \
+    controller/picturecontroller.h \
+    ui/dialogs/formpicturemanager.h \
+    ui/widgets/pictureselector.h \
+    controller/ledger/ledgercontrollermanager.h \
+    controller/ledger/ledgercontroller.h \
+    controller/ledger/genericledgercontroller.h \
+    ui/dialogs/formaboutplugins.h \
+    ui/dialogs/formabout.h \
+    controller/schedulecontroller.h \
+    model/schedule.h \
+    controller/simpleaccountcontroller.h \
+    model/documentmanager.h \
+    controller/ledger/brokerageledgercontroller.h \
+    model/investmenttransaction.h \
+    model/investmentlotsmanager.h \
+    ui/dialogs/formdistributioncomposition.h \
+    ui/dialogs/formgainlosswizard.h \
+    ui/widgets/splitfractionwidget.h \
+    util/augmentedtreapmap.h \
+    util/fragmentedtreapmap.h \
+    util/treaputil.h \
+    util/balances.h \
+    ui/dialogs/optionsdialog.h \
+    ui/dialogs/formeditschedule.h \
+    controller/ledger/ledgertransactioncache.h\
+    ui/widgets/percchart.h \
+    controller/indexcontroller.h \
+    ui/dialogs/formeditattachments.h \
+    ui/widgets/returnchart.h \
+    ui/dialogs/formsettings.h \
+    ui/dialogs/settingsdialogs/ledgersettings.h \
+    ui/widgets/dateintervalselector.h \
+    ui/dialogs/formmultiinvestmententry.h \
+    model/budget.h
+
+unix {
+    target.path = /usr/lib
+    INSTALLS += target
+}

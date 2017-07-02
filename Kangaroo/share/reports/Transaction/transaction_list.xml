@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+	<name>List of transactions</name>
+	<description>List of transactions</description>
+	<version>1.0</version>
+	<icon>open-ledger</icon>
+	<author>Lucas Rioux-Maldague</author>
+	<content>transaction_list.html</content>
+	
+	<settings>
+		<setting type="date" description="Start Date" codeid="begin_date" default="CURRENT_DATE" />
+		<setting type="date" description="End Date" codeid="end_date" default="CURRENT_DATE" />
+		<setting type="account" description="Account" codeid="tr_account" placeholder="false" flags="all" />
+		<setting type="boolean" description="Show opening and closing balances" default="true" codeid="show_closeopen" />
+	</settings>
+</report>
+

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+	<name>Balance sheet</name>
+	<description>Balance sheet</description>
+	<version>1.0</version>
+	<icon>income-account</icon>
+	<author>Lucas Rioux-Maldague</author>
+	<content>balance_sheet.kreport</content>
+	
+	<settings>
+		<setting type="date" description="Date of the report" codeid="report_date" default="CURRENT_DATE" />
+	</settings>
+</report>
+

@@ -1,0 +1,177 @@
+<? 
+	  
+	  var totalAss = 0;
+	  var totalLia = 0;
+	  top = new Account();
+	  prices = new PriceManager();
+	  
+	  var main_cur = top.mainCurrency;
+	  
+	  function printAmounts(_account, _pos)
+	  {
+			var amt = 0;
+			
+			var rate = 0;
+			
+			if (_account.type == 12)
+			{
+				rate = prices.rate(_account.idSecurity, main_cur);
+			}
+			else
+			{
+				rate = prices.rate(_account.mainCurrency, main_cur);
+			}
+			
+			if (_pos)
+			{
+				amt -= _account.ledger().balanceAt(Settings.report_date) * rate;
+				totalLia += amt;
+			}
+			else
+			{
+				amt += _account.ledger().balanceAt(Settings.report_date) * rate;
+				totalAss += amt;
+			}
+			print("<td class='amt'>");
+
+			print(Locale.toNum(amt));
+
+			print("</td>");
+		  
+		  return amt;
+	  }
+	  
+	  function lineIsEmpty(_account)
+	  {
+		  return _account.ledger().balanceAt(Settings.report_date) == 0;
+	  }
+	  
+	  function printLines(_account, _indent, _printCur, _pos)
+	  {
+		  var tot = 0;
+		  
+		  if (_printCur && (_account.childCount > 0 || !lineIsEmpty(_account)))
+		  {
+			  print("<tr><td>");
+			  for (var i = 0; i < _indent; ++i)
+				  print("&nbsp;");
+			  
+			  print(_account.name + "</td>");
+			
+			  if (!_account.isPlaceholder)
+					tot = printAmounts(_account, _pos);
+			  
+			  print("</tr>");
+		  }
+		  
+// 		  for (var i = 0; i < _account.childCount; ++i)
+// 		  {
+// 			  tot += printLines(_account.childAt(i), _indent+4, true, _pos);
+// 		  }
+
+          var children = _account.getChildren();
+		  
+		  for (var i = 0; i < children.length; ++i)
+          {
+                tot += printLines(children[i], _indent+4, true, _pos);
+          }
+		  
+		  if (_account.isPlaceholder && _printCur)
+		  {
+			  print("<tr><td class='subtotal'>&nbsp;</td><td class='amt subtotal'>");
+			  print(Locale.toNum(tot));
+			  print("</td></tr>");
+		  }
+		  
+		  return tot;
+	  }
+	  
+	  function printTotals(_total)
+	  {
+	      print("<td class='amt total'>" + Locale.toNum(_total) + "</td>");
+	  }
+	  
+	  
+	  
+	  ?> 
+<html>
+<head>
+	<title>Balance Sheet</title>
+	
+	<style>
+	
+	table
+	{
+		font-size: 14px;
+	}
+	
+	td.amt
+	{
+		text-align: right;
+	}
+	
+	td.subtotal
+	{
+		border-top: solid 1px black;
+		padding-bottom: 12px;
+		padding-top:2px;
+	}
+	
+	td.total
+	{
+		border-top: double 3px black;
+		padding-bottom: 12px;
+		padding-top:2px;
+	}
+	
+	th
+	{
+		text-align:right;
+	}
+	
+	</style>
+	
+</head>
+<body>
+	<h1>Balance Sheet</h1>
+	
+	<p>As of <? print(Settings.report_date.toDateString()); ?>, all amounts in <? print(main_cur); ?></p>
+	
+	<table>
+		
+			<tr><td><b>ASSETS</b></td></tr>
+			<? var acts = top.getChildren();
+			
+                for (var i = 0; i < acts.length; ++i)
+				{
+					if (acts[i].type == 1)
+					{
+						printLines(acts[i], -1, false, false);
+					}
+				} { ?>
+				
+				
+			<? } ?>
+			<tr><td class="total"><b>Total Assets</b> 	<? printTotals(totalAss); ?> </td></tr>
+			
+			<tr><td><b>LIABILITIES</b></td></tr>
+			<? 
+                for (var i = 0; i < acts.length; ++i)
+				{
+					if (acts[i].type == 2)
+					{
+						printLines(acts[i], -1, false, true);
+					}
+				} { ?>
+				
+				
+			<? } ?>
+			<tr><td class="total"><b>Total Liabilities</b> 	<? printTotals(totalLia); ?> </td></tr>
+			
+			
+			<tr><td class="total"><b>Net Worth</b> 	<? printTotals(totalAss-totalLia); ?> </td></tr>
+	
+	</table>
+
+</body>
+</html>

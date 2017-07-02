@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report>
+	<name>Detailed Tax Report</name>
+	<description>Tax report listing the transactions for each tax form.</description>
+	<version>1.0</version>
+	<icon>taxes-finances</icon>
+	<author>Lucas Rioux-Maldague</author>
+	<content>tax_report_detailed.kreport</content>
+	
+	<settings>
+        <setting type="date" description="Start Date" codeid="begin_date" />
+        <setting type="date" description="End Date" codeid="end_date" default="CURRENT_DATE" />
+	</settings>
+</report>
+

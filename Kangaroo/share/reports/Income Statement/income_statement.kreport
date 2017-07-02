@@ -1,0 +1,217 @@
+<?
+    var years = [2014];
+    
+    var totalInc = [0];
+    var totalExp = [0];
+    top = new Account();
+    prices = new PriceManager();
+    
+    var main_cur = top.mainCurrency;
+    
+    function printAmounts(_account, _years, _pos)
+    {
+        var tot = [0];
+        for (var i = 0; i < _years.length; ++i)
+        {
+            var begin = new Date(_years[i], 0, 1); //0: january...
+            var end = new Date(_years[i], 11, 31); //11-31= Dec 31
+            
+            if (!_pos)
+            {
+                tot[i] = -_account.ledger().balanceBetween(begin, end) * prices.rate(_account.mainCurrency, main_cur);
+                totalInc[i] += tot[i];
+            }
+            else
+            {
+                tot[i] = _account.ledger().balanceBetween(begin, end) * prices.rate(_account.mainCurrency, main_cur)
+                totalExp[i] += tot[i];
+            }
+            print("<td class='amt'>");
+            
+            if (i == 0) print("<b>");
+            print(Locale.toNum(tot[i]));
+            if (i == 0) print("</b>");
+            
+            print("</td>");
+        }
+        
+        return tot;
+    }
+    
+    function printSubtotal(_subtotal)
+    {
+        var tot = [0];
+        for (var i = 0; i < _subtotal.length; ++i)
+        {
+            print("<td class='amt subtotal'>");
+            
+            if (i == 0) print("<b>");
+            print(Locale.toNum(_subtotal[i]));
+            if (i == 0) print("</b>");
+            
+            print("</td>");
+        }
+        
+        return tot;
+    }
+    
+    function lineIsEmpty(_account, _years)
+    {
+        for (var i = 0; i < _years.length; ++i)
+        {
+            var begin = new Date(_years[i], 0, 1); //0: january...
+            var end = new Date(_years[i], 11, 31);
+            
+            if (_account.ledger().balanceBetween(begin, end) != 0)
+                return false;
+        }
+        
+        return true;
+    }
+    
+    function printLines(_account, _indent, _years, _printCur, _pos)
+    {
+        var tot = [0];
+        
+        for (var i = 0; i < _years.length; ++i)
+            tot[i] = 0;
+        
+        if (_printCur && (_account.childCount > 0 || !lineIsEmpty(_account, _years)))
+        {
+            print("<tr><td>");
+            for (var i = 0; i < _indent; ++i)
+                print("&nbsp;");
+            
+            print(_account.name + "</td>");
+            
+            if (!_account.isPlaceholder)
+                    tot = printAmounts(_account, _years, _pos);
+            
+            print("</tr>");
+        }
+        
+        var children = _account.getChildren();
+        
+        for (var i = 0; i < children.length; ++i)
+        {
+            var tot2 = printLines(children[i], _indent+4, _years, true, _pos);
+            
+            for (var j = 0; j < tot2.length; ++j)
+            {
+                tot[j] = tot[j]+tot2[j];
+            }
+        }
+        
+        if (_printCur && _account.isPlaceholder)
+        {
+            print("<tr><td class='subtotal'>&nbsp;</td>");
+            printSubtotal(tot);
+            print("</td></tr>");
+        }
+        
+        return tot;
+    }
+    
+    function printTotals(_totals)
+    {
+        for (var i = 0; i < _totals.length; ++i)
+        {
+            print("<td class='amt total'>" + Locale.toNum(_totals[i]) + "</td>");
+        }
+    }
+    
+    
+    
+    ?> 
+<html>
+<head>
+    <title><? print("Income Statement"); ?></title>
+    
+    <style>
+    
+    table
+    {
+        font-size: 14px;
+    }
+    
+    td.amt
+    {
+        text-align: right;
+    }
+    
+    td.subtotal
+    {
+        border-top: solid 1px black;
+        padding-bottom: 12px;
+        padding-top:2px;
+    }
+    
+    td.total
+    {
+        border-top: double 3px black;
+        padding-bottom: 12px;
+        padding-top:2px;
+    }
+    
+    th
+    {
+        text-align:right;
+    }
+    
+    </style>
+    
+</head>
+<body>
+    <h1><? print("Income Statement"); ?></h1>
+    
+    <p>To December 31<textsuperscript>st</textsuperscript> <? print(Settings.report_year); ?>, all amounts in <? print(main_cur); ?></p>
+    
+    <table>
+        <tr> <th>&nbsp;</th>
+            <? 
+                for (var i = 0; i <= Settings.num_previous; ++i) 
+                { 
+                    print("<th width='100px'>" + (Settings.report_year-i) + "</th>"); 
+                    years[i] = Settings.report_year-i;
+                    totalInc[i] = 0;
+                    totalExp[i] = 0;
+                }
+            ?>
+        </tr>
+        
+            <tr><td><b>REVENUE</b></td></tr>
+            <? var accts = top.getChildren();
+            
+            for (var i = 0; i < accts.length; ++i)
+                {
+                    if (accts[i].type == 4)
+                    {
+                        printLines(accts[i], -1, years, false, false);
+                    }
+                } { ?>
+                
+                
+            <? } ?>
+            <tr><td class="total"><b>Total Revenues</b> 	<? printTotals(totalInc); ?> </td></tr>
+            
+            <tr><td><b>EXPENSES</b></td></tr>
+            <? for (var i = 0; i < accts.length; ++i)
+                {
+                    if (accts[i].type == 5)
+                    {
+                        printLines(accts[i], -1, years, false, true);
+                    }
+                } { ?>
+                
+                
+            <? } ?>
+            <tr><td class="total"><b>Total Expenses</b> 	<? printTotals(totalExp); ?> </td></tr>
+            
+            <? netInc = totalInc; for (var i = 0; i < totalInc.length; ++i) netInc[i] -= totalExp[i]; ?>
+            
+            <tr><td class="total"><b>Net Income</b> 	<? printTotals(netInc); ?> </td></tr>
+    
+    </table>
+
+</body>
+</html>

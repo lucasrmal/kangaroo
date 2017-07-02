@@ -1,0 +1,96 @@
+<? 
+      var reporter = new TaxReporter();
+      var report = reporter.taxReportFor(Settings.begin_date, Settings.end_date);
+      var top = new Account();
+	  var main_cur = top.mainCurrency;
+	  var payees = new PayeeManager();
+	  
+	   
+	  
+	  
+	  
+	  ?> 
+<html>
+<head>
+    <title><? print("List of transactions"); ?></title>
+    
+    <style>
+    
+    table
+    {
+        font-size: 12px;
+        border-spacing:0px;
+        width:100%;
+    }
+    
+    td.amt
+    {
+        text-align: right;
+        vertical-align:bottom;
+    }
+    
+    th
+    {
+        text-align:left;
+    }
+    
+    td.amt
+    {
+        text-align:right;
+    }
+    
+    td, th
+    {
+        padding:4px;
+    }
+    
+    </style>
+    
+</head>
+<body>
+    <h1><? print("Detailed Tax Report"); ?></h1>
+    
+    <p>From <? print(Settings.begin_date.toDateString()); ?> to <? print(Settings.end_date.toDateString()); ?>, all amounts in <? print(main_cur); ?></p>
+    
+    <? for (category in report) {
+    
+        var total = 0;
+        var list = report[category];
+        
+        ?><h3><? print(category); ?></h3>
+        
+        <table>
+        <? for (var i = 0; i < list.length; ++i) { 
+        
+            var transaction = list[i][1];
+            var amount = transaction.totalForInMainCurrency(list[i][0]);
+            var account = top.account(list[i][0]);
+            
+            if (account.type == 4) //Income
+            {
+                amount = -amount;
+            }
+            
+            total += amount;
+            
+            var accountName = account.parent != top ? (account.parent().name + ":" + account.name) : account.name;
+        
+        ?>
+            <tr>
+                <td width="15%"><? print(transaction.date.toDateString()); ?></td>
+                <td width="37%"><? print(transaction.memo); ?></td>
+                <td width="15%"><? print(transaction.idPayee != -1 ? payees.get(transaction.idPayee).name : ""); ?></td>
+                <td width="20%"><? print(accountName); ?></td>
+                <td class="amt" width="12%"><? print(top.formatAmount(amount)); ?></td>
+            </tr>        
+        <? } ?>
+            <tr>
+                <td colspan="3">&nbsp;</td>
+                <td colspan="2" class="amt" width="37%"><b>Total: <? print(top.formatAmount(total)); ?></b></td>
+            </tr>
+        </table>
+        
+    <? } //For each tax form ?>
+
+</body>
+</html>
