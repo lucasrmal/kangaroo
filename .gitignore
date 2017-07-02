@@ -1,0 +1,7 @@
+## User-specific files
+**/*.pro.user
+
+## Build results
+**/build/**
+**/Makefile 
+**/*.so
