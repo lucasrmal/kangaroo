@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+package kangaroo.engine;
+
+message Transaction {
+  optional int64 id = 1;
+
+  // Date in YYYYMMDD format (stored as integer). Ex: 20010221 => 2001-02-21.
+  optional int64 date = 2;
+
+  // Transaction reference number (ex: confirmation #).
+  optional string reference_number = 3;
+
+  enum ClearedStatus {
+    UNKNOWN = 0;
+    CLEARED = 1;
+    RECONCILED = 2;
+  }
+
+  optional ClearedStatus cleared_status = 4;
+  optional bool is_flagged = 5;
+  optional int64 payee_id = 6;
+
+  repeated Split splits = 7;
+
+  repeated int64 attachment_ids = 10;
+  optional string note = 11;
+}
+
+message Split {
+  optional int64 account_id = 1;
+  optional int64 amount_micros = 2;
+
+  // TODO: Figure out security stuff.
+  optional string currency = 3;
+  optional string note = 4;
+
+  // TODO: What is this???
+  optional string user_data = 5;  
+}
