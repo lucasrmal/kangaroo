@@ -3,12 +3,14 @@ syntax = "proto2";
 package kangaroo.engine;
 
 message Transaction {
+  // [Required] Unique identifier.
   optional int64 id = 1;
 
-  // Date in YYYYMMDD format (stored as integer). Ex: 20010221 => 2001-02-21.
+  // [Required] Date in YYYYMMDD format (stored as integer). 
+  // Ex: 20010221 => 2001-02-21.
   optional int64 date = 2;
 
-  // Transaction reference number (ex: confirmation #).
+  // [Optional] Transaction reference number (ex: confirmation #).
   optional string reference_number = 3;
 
   enum ClearedStatus {
@@ -17,22 +19,36 @@ message Transaction {
     RECONCILED = 2;
   }
 
-  optional ClearedStatus cleared_status = 4;
-  optional bool is_flagged = 5;
+  // [Required] 
+  optional ClearedStatus cleared_status = 4 [default = UNKNOWN];
+
+  // [Optional]
+  optional bool is_flagged = 5 [default = false];
+
+  // [Optional]
   optional int64 payee_id = 6;
 
-  repeated Split splits = 7;
+  // [Required] Splits. Must balance for each currency.
+  repeated Split split = 7;
 
-  repeated int64 attachment_ids = 10;
+  // [Optional] Attachments (such as receipts).
+  repeated int64 attachment_id = 10;
+
+  // [Optional]
   optional string note = 11;
 }
 
 message Split {
+  // [Required]
   optional int64 account_id = 1;
+
+  // [Required] 
   optional int64 amount_micros = 2;
 
-  // TODO: Figure out security stuff.
-  optional string currency = 3;
+  // [Required] 
+  optional int64 commodity_id = 3;
+
+  // [Optional] Split-level note.
   optional string note = 4;
 
   // TODO: What is this???
