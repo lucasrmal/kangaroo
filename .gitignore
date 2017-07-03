@@ -8,5 +8,9 @@ Kangaroo/lib/
 **/Makefile 
 **/*.so
 
+## Generated files
+*.pb.h
+*.pb.cc
+
 ## Other stuff
 cloc-1.62.pl
