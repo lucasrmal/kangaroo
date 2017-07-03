@@ -22,29 +22,27 @@
 
 #include <QString>
 
-namespace KLib
-{
+namespace KLib {
 
-    class ReportGenerator
-    {
-        public:
+class ReportGenerator {
+ public:
+  static QString generateHtml(const QString& _inFile,
+                              const QString& _additionalStatement = QString());
 
-            static QString generateHtml(const QString& _inFile, const QString& _additionalStatement = QString());
+  /**
+   * @brief generatePDF Generates a PDF file in the same directory as _inFile,
+   * with the same name but .pdf extension.
+   * @param _inFile
+   */
+  // static bool generatePDF(const QString& _inFile, const QString& _dir);
 
-            /**
-             * @brief generatePDF Generates a PDF file in the same directory as _inFile, with the same name but .pdf extension.
-             * @param _inFile
-             */
-            //static bool generatePDF(const QString& _inFile, const QString& _dir);
+  // static const QString COMMAND_TEX_TO_PDF;
+  static const QString TAG_BEGIN_CODE;
+  static const QString TAG_END_CODE;
 
-            //static const QString COMMAND_TEX_TO_PDF;
-            static const QString TAG_BEGIN_CODE;
-            static const QString TAG_END_CODE;
-
-        private:
-            ReportGenerator() {}
-    };
-
+ private:
+  ReportGenerator() {}
+};
 }
 
-#endif // REPORTGENERATOR_H
+#endif  // REPORTGENERATOR_H

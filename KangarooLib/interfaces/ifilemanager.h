@@ -24,31 +24,25 @@
 
 class QIODevice;
 
-namespace KLib
-{
-    class Archive;
+namespace KLib {
+class Archive;
 
-    class IFileManager : public IStored
-    {
-        Q_OBJECT
+class IFileManager : public IStored {
+  Q_OBJECT
 
+ signals:
+  void modified();
 
-        signals:
-            void modified();
+ protected:
+  virtual void loadFile(const QString& _name, QIODevice* _file) = 0;
+  virtual void saveFiles(Archive& _archive) = 0;
 
-        protected:
-            virtual void loadFile(const QString& _name, QIODevice* _file) = 0;
+  void load(QXmlStreamReader& _reader) { Q_UNUSED(_reader) }
+  void save(QXmlStreamWriter& _writer) const { Q_UNUSED(_writer) }
 
-            virtual void saveFiles(Archive& _archive) = 0;
+  friend class IO;
+  friend class Archive;
+};
+}  // namespace KLib
 
-            void load(QXmlStreamReader& _reader) { Q_UNUSED(_reader) }
-
-            void save(QXmlStreamWriter& _writer) const { Q_UNUSED(_writer) }
-
-            friend class IO;
-            friend class Archive;
-
-    };
-}
-
-#endif // IFILEMANAGER_H
+#endif  // IFILEMANAGER_H

@@ -17,7 +17,7 @@ MOC_DIR = build/moc
 UI_DIR = build/ui
 
 DEFINES += KANGAROOLIB_LIBRARY
-QT += widgets script printsupport
+QT += gui widgets script printsupport
 
 INCLUDEPATH += /usr/local/include /include
 
