@@ -1,0 +1,5 @@
+namespace kangaroo {
+
+class Date {};
+
+}

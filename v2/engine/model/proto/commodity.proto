@@ -1,0 +1,75 @@
+syntax = "proto2";
+
+package kangaroo.model;
+
+message Commodity {
+  // [Required] Unique identifier.
+  optional int64 id = 1;
+
+  // [Required] Exactly one of these must be specified.
+  oneof type {
+    Security security = 2;
+    Currency currency = 3;
+  }
+
+  // [Required]
+  optional string name = 4;
+
+  // [Required] Symbol identifying the commodity. Used for online quotes/
+  // Ex: `USD`, `GE`.
+  // Symbols should be unique within their own namespace (security or currency).
+  optional string symbol = 5;
+
+  // [Required] Number of decimal places supported by this commodity.
+  // Ex: 0: integer; 2: hundredths. Max is 6 (micros)
+  optional int32 decimal_places = 6 [default = 2];
+}
+
+message Security {
+  enum Type {
+    UNKNOWN = 0;
+
+    STOCK = 1;
+    PREFERRED_STOCK = 2;
+
+    ETF = 3;
+    MUTUAL_FUND = 4;
+
+    BOND = 5;
+
+    // TODO: Is this used? Delete?
+    INDEX = 50;
+  }
+
+  // [Required] Type of security.
+  optional Type type = 1;
+
+  // [Required] Currency this security is traded in.
+  optional int64 traded_currency_id = 2;
+
+  // [Optional]
+  optional string market = 10;
+
+  // [Optional]
+  optional string sector = 11;
+
+  // [Optional]
+  optional string geo_location = 12;
+
+  // [Optional]
+  optional int64 icon_id = 13;
+
+  // [Optional]
+  optional int64 provider_institution_id = 14;
+
+  // [Optional]If true, account will use security icon.
+  optional bool use_security_icon_for_account = 20;
+
+  // [Optional]
+  optional string note = 30;
+}
+
+message Currency {
+  // [Optional] Display symbol, such as `$`.
+  optional string display_symbol = 1;
+}

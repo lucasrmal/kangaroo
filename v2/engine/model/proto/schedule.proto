@@ -1,0 +1,75 @@
+syntax = "proto2";
+
+package kangaroo.model;
+
+message Schedule {
+  // [Required] Unique identifier.
+  optional int64 id = 1;
+
+  // [Optional]
+  optional string description = 2;
+
+  // [Required]
+  optional bool is_active = 3 [default = true];
+
+  message Recurrence {
+    // [Required] Date at which starts the schedule. It is not necessarily the 
+    // date of the first occurrence.
+    optional int32 begin_date = 1;
+
+    enum Frequency {
+      UNKNOWN = 0;
+
+      ONCE = 1;
+      DAILY = 2;
+      WEEKLY = 3;
+      MONTHLY = 4;
+      YEARLY = 5;
+    };
+    optional Frequency frequency = 2;
+
+    // Must be > 0. If 1, then will occur every frequency.
+    // ex: frequency = Month, every=2 : will occur every 2 months:
+    // Jan, Mar, May, ...
+    optional int32 every = 3;
+
+    // If Weekly, contains a list of days the recurrence occurs during the week.
+    repeated int32 weekday = 4;
+
+    // For Yearly: all the days for the year.
+    repeated int32 day_of_year = 5;
+
+    //For Monthly: all the days for the month.
+    repeated int32 day_of_month = 6;
+
+    // If the recurrence stops at some point.
+    // Exactly one of lastDate or numRemaining must be valid if stops is true.
+    optional bool stops = 7;
+
+    oneof stops_when {
+      // The last possible date of an occurrence, if stops is true.
+      // It is not necessarily the last date of the schedule, but no 
+      // occurrences can happen after it.
+      int32 last_date = 10;
+
+      // Number of remaining occurrences.
+      // Invalid if -1. Can be 0, in that case no more occurrences of the 
+      // schedule can occur.
+      // This value will be decremented each time an occurrence is canceled or 
+      // entered.
+      int32 numRemaining = 11;
+    }
+  }
+
+  // [Required]
+  optional Recurrence recurrence = 4;
+
+  // [Optional]
+  optional int64 remind_n_days_before = 10;
+
+  // [Optional]
+  optional bool auto_enter = 11;
+  
+  // [Optional]
+  optional string note = 20;
+}
