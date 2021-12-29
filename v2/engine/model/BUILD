@@ -58,6 +58,22 @@ cc_library(
 )
 
 cc_library(
+    name = "price-manager",
+    deps = ["//model/types:date",
+    "@com_google_absl//absl/strings",
+    "@com_google_absl//absl/container:btree"],
+    hdrs = ["price-manager.h"],
+    srcs = ["price-manager.cc"],
+)
+
+cc_test(
+    name = "price-manager_test",
+    deps = ["@com_google_googletest//:gtest_main",
+            ":price-manager"],
+    srcs = ["price-manager_test.cc"],
+)
+
+cc_library(
     name = "validators",
     deps = ["@com_google_absl//absl/strings",
             "@com_google_absl//absl/status:status"],
