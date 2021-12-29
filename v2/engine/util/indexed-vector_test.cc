@@ -1,8 +1,8 @@
 #include "util/indexed-vector.h"
 
-#include <string>
-
 #include <gtest/gtest.h>
+
+#include <string>
 
 namespace kangaroo {
 namespace {
@@ -21,7 +21,7 @@ struct TestElement {
 TEST(IndexedVector, GetNonExisting) {
   IndexedVector<TestElement> index;
   int64_t idx = index.Insert(std::make_unique<TestElement>("A"));
-  EXPECT_EQ(nullptr, index.Get(idx+1));
+  EXPECT_EQ(nullptr, index.Get(idx + 1));
 }
 
 TEST(IndexedVector, InsertElement) {
@@ -103,4 +103,3 @@ TEST(IndexedVector, LoadClearsMap) {
 
 }  // namespace
 }  // namespace kangaroo
-

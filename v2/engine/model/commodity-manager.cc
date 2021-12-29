@@ -70,8 +70,210 @@ absl::Status CommodityManager::ValidateInsert(
 
 absl::Status CommodityManager::ValidateRemove(
     const Commodity& commodity) const {
+  if (commodity.has_currency()) {
+    // Check for all security with this currency id.
+    for (auto it = objects_.iterator(); it != objects_.iterator_end(); ++it) {
+      if (it->second->has_security() &&
+          it->second->security().traded_currency_id() == commodity.id()) {
+        return absl::InvalidArgumentError(
+            "Cannot delete currency that is referenced by at least one "
+            "security.");
+      }
+    }
+  }
+
   // TODO(lucasrmal): Update all accounts with this payee id and set to none.
   return absl::UnimplementedError("Not Yet Implemented!");
+
+  // // Remove the price pair
+  // PriceManager::instance()->removeAll(c->code());
+}
+
+// bool canRemove_recursiveA(const std::string& _code, Account* _a) {
+//   if (!_a) {
+//     return true;
+//   } else if (_a->mainCurrency() == _code) {
+//     return false;
+//   } else {
+//     for (Account* c : _a->getChildren()) {
+//       if (!canRemove_recursiveA(_code, c)) return false;
+//     }
+//   }
+
+//   return true;
+// }
+
+// bool canDeleteS(const std::string& _code) {
+//   for (Security* s : SecurityManager::instance()->securities()) {
+//     if (s->currency() == _code) return false;
+//   }
+
+//   return true;
+// }
+
+const std::vector<WorldCurrency>& CommodityManager::WorldCurrencies() {
+  static const std::vector<WorldCurrency> currencies = {
+      {"Albanian lek", "ALL", "L"},
+      {"Afghan afghani", "AFN", "؋"},
+      {"Algerian dinar", "DZN", "د.ج"},
+      {"Angolan kwanza", "AOA", "Kz"},
+      {"Argentine peso", "ARS", "$"},
+      {"Armenian dram", "AMD", ""},
+      {"Aruban florin", "AWG", "ƒ"},
+      {"Australian dollar", "AUD", "$"},
+      {"Azerbaijani manat", "AZN", ""},
+      {"Bahamian dollar", "BDS", "$"},
+      {"Bahraini dinar", "BHD", "", 3},
+      {"Bangladeshi taka", "BDT", "৳"},
+      {"Barbadian dollar", "BBD", "$"},
+      {"Belarusian ruble", "BYR", "Br"},
+      {"Belize dollar", "BZD", "$"},
+      {"Bermudian dollar", "BMD", "$"},
+      {"Bhutanese ngultrum", "BTN", "Nu."},
+      {"Bolivian boliviano", "BOB", "Bs."},
+      {"Bosnia and Herzegovina convertible mark", "BAM", "KM"},
+      {"Botswana pula", "BWP", "P"},
+      {"Brazilian real", "BRL", "R$"},
+      {"British Pound", "GBP", "£"},
+      {"Brunei dollar", "BND", "$"},
+      {"Bulgarian lev", "BGN", "лв"},
+      {"Burmese kyat", "MKK", "Ks"},
+      {"Burundian franc", "BIF", "Fr"},
+      {"Cambodian riel", "KHR", "៛"},
+      {"Canadian Dollar", "CAD", "$"},
+      {"Cape Verdean escudo", "CVE", "Esc"},
+      {"Cayman Islands dollar", "KYD", "$"},
+      {"Central African CFA franc", "XAF", "Fr"},
+      {"CFP franc", "XPF", "Fr"},
+      {"Chilean peso", "CLP", "$"},
+      {"Chinese yuan", "CNY", "¥"},
+      {"Colombian peso", "COP", "$"},
+      {"Comorian franc", "KMF", "Fr"},
+      {"Congolese franc", "CFD", "Fr"},
+      {"Costa Rican colón", "CRC", "₡"},
+      {"Croatian kuna", "HRK", "kn"},
+      {"Cuban convertible peso", "CUC", "$"},
+      {"Cuban peso", "CUP", "$"},
+      {"Czech koruna", "CZK", "Kč"},
+      {"Danish krone", "DKK", "kr"},
+      {"Djiboutian franc", "DJF", "Fr"},
+      {"Dominican peso", "DOP", "$"},
+      {"East Caribbean dollar", "XCD", "$"},
+      {"Egyptian pound", "EGP", "£"},
+      {"Eritrean nakfa", "ERN", "Nfk"},
+      {"Ethiopian birr", "ETB", "Br"},
+      {"Euro", "EUR", "€"},
+      {"Falkland Islands pound", "FKP", "£"},
+      {"Fijian dollar", "FJD", "$"},
+      {"Gambian dalasi", "GMD", "D"},
+      {"Georgian lari", "GEL", "ლ"},
+      {"Ghana cedi", "GHS", "₵"},
+      {"Gibraltar pound", "GIP", "£"},
+      {"Guatemalan quetzal", "GTQ", "Q"},
+      {"Guernsey pound", "GGP", "£"},
+      {"Guinean franc", "GNF", "Fr"},
+      {"Guyanese dollar", "GYD", "$"},
+      {"Haitian gourde", "HTG", "G"},
+      {"Honduran lempira", "HNL", "L"},
+      {"Hong Kong dollar", "HKD", "$"},
+      {"Hungarian forint", "HUF", "Ft"},
+      {"Icelandic króna", "ISK", "kr"},
+      {"Indian rupee", "INR", "₹"},
+      {"Indonesian rupiah", "IDR", "Rp"},
+      {"Iranian rial", "IRR", "﷼"},
+      {"Iraqi dinar", "IQD", "", 3},
+      {"Israeli new shekel", "ILS", "₪"},
+      {"Jamaican dollar", "JMD", "$"},
+      {"Japanese yen", "JPY", "¥"},
+      {"Jersey pound", "JEP", "£"},
+      {"Jordanian dinar", "JOD", "د.ا"},
+      {"Kazakhstani tenge", "KZT", "₸"},
+      {"Kenyan shilling", "KES", "Sh"},
+      {"Kuwaiti dinar", "KWD", "د.ك"},
+      {"Kyrgyzstani som", "KGS", "лв"},
+      {"Lao kip", "LAK", "₭"},
+      {"Lebanese pound", "LBP", ""},
+      {"Lesotho loti", "LSL", "L"},
+      {"Liberian dollar", "LRD", "$"},
+      {"Libyan dinar", "LYD", ""},
+      {"Lithuanian litas", "LTL", "Lt"},
+      {"Macanese pataca", "MOP", "P"},
+      {"Macedonian denar", "MKD", "ден"},
+      {"Malagasy ariary", "MGA", "Ar"},
+      {"Malawian kwacha", "MWK", "MK"},
+      {"Malaysian ringgit", "MYR", "RM"},
+      {"Maldivian rufiyaa", "MVR", ""},
+      {"Manx pound", "IMP", "£"},
+      {"Mauritanian ouguiya", "MRO", "UM"},
+      {"Mauritian rupee", "MUR", "Rs"},
+      {"Mexican peso", "MXN", "$"},
+      {"Moldovan leu", "MDL", "L"},
+      {"Mongolian tögrög", "MNT", "₮"},
+      {"Moroccan dirham", "MAD", "د.م."},
+      {"Mozambican metical", "MZN", "MT"},
+      {"Namibian dollar", "NAD", "$"},
+      {"Nepalese rupee", "NPR", "Rs"},
+      {"Netherlands Antillean guilder", "ANG", "ƒ"},
+      {"New Taiwan dollar", "TWD", "$"},
+      {"New Zealand dollar", "NZD", "$"},
+      {"Nicaraguan córdoba", "NIO", "C$"},
+      {"Nigerian naira", "NGN", "₦"},
+      {"North Korean won", "KPW", "₩"},
+      {"Norwegian krone", "NOK", "kr"},
+      {"Omani rial", "OMR", "ر.ع."},
+      {"Pakistani rupee", "PKR", "Rs"},
+      {"Panamanian balboa", "PAB", "B/."},
+      {"Papua New Guinean kina", "PGK", "K"},
+      {"Paraguayan guaraní", "PYG", "₲"},
+      {"Peruvian nuevo sol", "PEN", "S/."},
+      {"Philippine peso", "PHP", "₱"},
+      {"Polish złoty", "PLN", "zł"},
+      {"Qatari riyal", "QAR", "ر.ق"},
+      {"Romanian leu", "RON", "lei"},
+      {"Russian ruble", "RUB", "р."},
+      {"Rwandan franc", "RWF", "Fr"},
+      {"Saint Helena pound", "SHP", "£"},
+      {"Samoan tālā", "WST", "T"},
+      {"Saudi riyal", "SAR", "ر.س"},
+      {"Serbian dinar", "RSD", "дин"},
+      {"Seychellois rupee", "SCR", "Rs"},
+      {"Sierra Leonean leone", "SLL", "Le"},
+      {"Singapore dollar", "SGD", "$"},
+      {"Solomon Islands dollar", "SBD", "$"},
+      {"Somali shilling", "SOS", "Sh"},
+      {"South African rand", "ZAR", "R"},
+      {"South Korean won", "KRW", "₩"},
+      {"South Sudanese pound", "SSP", "£"},
+      {"Sri Lankan rupee", "LKR", "Rs"},
+      {"Sudanese pound", "SDG", "£"},
+      {"Surinamese dollar", "SRD", "$"},
+      {"Swazi lilangeni", "SZL", "L"},
+      {"Swedish krona", "SEK", "kr"},
+      {"Swiss franc", "CHF", "Fr"},
+      {"Syrian pound", "SYP", "£"},
+      {"São Tomé and Príncipe dobra", "STD", "Db"},
+      {"Tajikistani somoni", "TJS", "SM"},
+      {"Tanzanian shilling", "TZS", "Sh"},
+      {"Thai baht", "THB", "฿"},
+      {"Tongan paʻanga", "TOP", "T$"},
+      {"Transnistrian ruble", "PRB", "p."},
+      {"Trinidad and Tobago dollar", "TTD", "$"},
+      {"Tunisian dinar", "TND", "د.ت"},
+      {"Turkish lira", "TRY", ""},
+      {"Turkmenistan manat", "TMT", "m"},
+      {"Ugandan shilling", "UGX", "Sh"},
+      {"Ukrainian hryvnia", "UAH", "₴"},
+      {"United Arab Emirates dirham", "UAE", "د.إ"},
+      {"United States Dollar", "USD", "$"},
+      {"Uruguayan peso", "UYU", "$"},
+      {"Uzbekistani som", "UZS", "лв"},
+      {"Vanuatu vatu", "VUV", "Vt"},
+      {"Venezuelan bolívar", "VEF", "Bs F"},
+      {"Vietnamese đồng", "VND", "₫"},
+      {"West African CFA franc", "XOF", "Fr"},
+      {"Yemeni rial", "YER", "﷼"},
+      {"Zambian kwacha", "ZMV", "ZK"}};
+  return currencies;
 }
 
 }  // namespace kangaroo::model
