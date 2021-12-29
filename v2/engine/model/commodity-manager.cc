@@ -82,7 +82,7 @@ absl::Status CommodityManager::ValidateRemove(
     }
   }
 
-  // TODO(lucasrmal): Update all accounts with this payee id and set to none.
+  // TODO(lucasrmal): Check all accounts with this commodity id
   return absl::UnimplementedError("Not Yet Implemented!");
 
   // // Remove the price pair

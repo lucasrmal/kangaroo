@@ -36,12 +36,9 @@ message Security {
     MUTUAL_FUND = 4;
 
     BOND = 5;
-
-    // TODO: Is this used? Delete?
-    INDEX = 50;
   }
 
-  // [Required] Type of security.
+  // [Optional] Type of security.
   optional Type type = 1;
 
   // [Required] Currency this security is traded in.
