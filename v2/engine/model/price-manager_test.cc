@@ -24,6 +24,21 @@ TEST(PriceManagerTest, GetOrCreatePair) {
   EXPECT_NE(prices.Get("AAA", "BBB"), nullptr);
 }
 
+TEST(PriceManagerTest, GetOrCreateEqualsReturnsNullptr) {
+  PriceManager prices;
+  EXPECT_EQ(prices.GetOrCreate("AAA", "AAA"), nullptr);
+}
+
+TEST(PriceManagerTest, GetOrCreateEmptyFirstReturnsNullptr) {
+  PriceManager prices;
+  EXPECT_EQ(prices.GetOrCreate("", "AAA"), nullptr);
+}
+
+TEST(PriceManagerTest, GetOrCreateEmptySecondReturnsNullptr) {
+  PriceManager prices;
+  EXPECT_EQ(prices.GetOrCreate("AAA", ""), nullptr);
+}
+
 TEST(PriceManagerTest, Remove) {
   PriceManager prices;
   ASSERT_NE(prices.GetOrCreate("AAA", "BBB"), nullptr);

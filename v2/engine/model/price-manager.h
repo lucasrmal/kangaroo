@@ -53,6 +53,8 @@ class PriceManager {
   PricePair* GetOrCreate(const std::string& from, const std::string& to);
   const PricePair* Get(const std::string& from, const std::string& to) const;
 
+  double LatestPrice(const std::string& from, const std::string& to) const;
+
   void Remove(const std::string& from, const std::string& to);
 
  private:

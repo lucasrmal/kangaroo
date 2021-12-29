@@ -32,6 +32,9 @@ PriceManager* PriceManager::instance_ = new PriceManager();
 
 PricePair* PriceManager::GetOrCreate(const std::string& from,
                                      const std::string& to) {
+  if (from == to || from.empty() || to.empty()) {
+    return nullptr;
+  }
   return &(pairs_[MakeKey(from, to)]);
 }
 const PricePair* PriceManager::Get(const std::string& from,
@@ -43,6 +46,20 @@ const PricePair* PriceManager::Get(const std::string& from,
 void PriceManager::Remove(const std::string& from, const std::string& to) {
   pairs_.erase(MakeKey(from, to));
 }
+
+double PriceManager::LatestPrice(const std::string& from,
+                                 const std::string& to) const {
+  if (const PricePair* pair = Get(from, to); pair != nullptr) {
+    return pair->Latest();
+  } else if (const PricePair* reverse_pair = Get(to, from);
+             reverse_pair != nullptr) {
+    return 1. / reverse_pair->Latest();
+  } else {
+    return 0;
+  }
+}
+
+// PricePair Implementation
 
 double PricePair::Latest() const {
   auto it = rates_.begin();
