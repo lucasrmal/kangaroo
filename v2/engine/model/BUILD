@@ -10,6 +10,15 @@ cc_library(
 )
 
 cc_library(
+    name = "icon-manager",
+    deps = [":object-manager",
+            "@com_google_absl//absl/status:status",
+            "//model/proto:icon_cc_proto"],
+    srcs = ["icon-manager.cc"],
+    hdrs = ["icon-manager.h"]
+)
+
+cc_library(
     name = "institution-manager",
     deps = [":object-manager",
             ":validators",

@@ -22,6 +22,16 @@ cc_proto_library(
 )
 
 proto_library(
+    name = "icon_proto",
+    srcs = ["icon.proto"],
+    deps = [],
+)
+cc_proto_library(
+    name = "icon_cc_proto",
+    deps = [":icon_proto"],
+)
+
+proto_library(
     name = "institution_proto",
     srcs = ["institution.proto"],
     deps = [],
