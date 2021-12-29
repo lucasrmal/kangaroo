@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package kangaroo.model;
+
+message Icon {
+  // [Required] Unique identifier.
+  optional int64 id = 1;
+
+  // [Required] Path
+  optional string path = 2;
+}
