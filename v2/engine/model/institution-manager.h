@@ -24,14 +24,18 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "model/icon-manager.h"
 #include "model/object-manager.h"
 #include "model/proto/institution.pb.h"
+#include "model/validator-helpers.h"
 #include "model/validators.h"
 
 namespace kangaroo::model {
 
 class InstitutionManager : public ObjectManager<Institution> {
  public:
+  explicit InstitutionManager(IconManager* icon_manager)
+      : icon_manager_(icon_manager), icon_id_validator_(icon_manager_) {}
   std::vector<std::string> CountriesInUse() const;
   /**
    * @brief merge Merge a set of institutions into a single one
@@ -39,8 +43,6 @@ class InstitutionManager : public ObjectManager<Institution> {
    * @param _idTo The destination institution id. Must be included in _ids.
    */
   absl::Status Merge(const std::vector<int64_t>& from, int64_t to);
-
-  static InstitutionManager* instance() { return instance_; }
 
  protected:
   absl::Status ValidateRemove(const Institution& inst) const override;
@@ -51,10 +53,11 @@ class InstitutionManager : public ObjectManager<Institution> {
   }
 
  private:
+  IconManager* icon_manager_;
+
   RequiredValidator<Institution, &Institution::name> required_name_validator_ =
       {"name"};
   IconIdValidator<Institution> icon_id_validator_;
-  static InstitutionManager* instance_;
 };
 
 }  // namespace kangaroo::model

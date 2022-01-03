@@ -39,6 +39,11 @@ date_t FromCivilDay(absl::CivilDay day) {
 
 date_t Normalize(date_t date) { return FromCivilDay(ToCivilDay(date)); }
 
+date_t CurrentDate() {
+  static const absl::TimeZone local_tz = absl::LocalTimeZone();
+  return FromCivilDay(absl::ToCivilDay(absl::Now(), local_tz));
+}
+
 }  // namespace date
 
 }  // namespace kangaroo

@@ -4,7 +4,7 @@ package kangaroo.model;
 
 message Account {
   enum Type {
-    TOPLEVEL = 0;      // The parent of all accounts. Can only be defined once.
+    ROOT = 0;      // The parent of all accounts. Can only be defined once.
 
     ASSET = 1;         // Generic asset
     LIABILITY = 2;     // Generic liability
@@ -42,24 +42,24 @@ message Account {
   // [Optional] User-defined account idendifier.
   optional string code = 4;
 
+  // [Required*] Parent of this account. *Except for the single root account.
+  optional int64 parent_id = 5;
+
   // [Required] Transactions in closed accounts may not be changed.
-  optional bool is_open = 5 [default = true];
+  optional bool is_archived = 6 [default = true];
 
   // [Required] Placeholder accounts may not have transactions.
-  optional bool is_placeholder = 6 [default = false];
+  optional bool is_placeholder = 7 [default = false];
 
-  // [Required] Commodities allowed in this account. Must have at least 1.
-  repeated int64 commodity_id = 7;
-
-  // [Required] Main account commodity. Must be in commodity_id.
-  optional int64 main_commodity_id = 8;
+  // [Required] Account commodity. Must be a security for Investment accounts, a currency otherwise.
+  optional int64 commodity_id = 8;
 
   // [Optional]
-  optional int64 institution_id = 13;
+  optional int64 institution_id = 9;
 
   // [Optional]
-  optional int64 icon_id = 14;
+  optional int64 icon_id = 10;
 
   // [Optional]
-  optional string note = 15;
+  optional string note = 11;
 }

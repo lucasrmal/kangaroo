@@ -31,19 +31,15 @@ namespace kangaroo::model {
 
 class IconManager : public ObjectManager<Icon> {
  public:
-  static IconManager* instance() { return instance_; }
-
+  IconManager() = default;
   std::string PathForIcon(int64_t icon_id) const;
 
  protected:
-  absl::Status ValidateRemove(const Icon& icon) const;
+  absl::Status ValidateRemove(const Icon& icon) const override;
   std::vector<ObjectIndexT*> Indexes() override { return {}; }
   std::vector<const ObjectValidatorT*> Validators() const override {
     return {};
   }
-
- private:
-  static IconManager* instance_;
 };
 
 }  // namespace kangaroo::model

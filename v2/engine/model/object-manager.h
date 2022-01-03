@@ -62,6 +62,10 @@ class ObjectManager {
     return absl::OkStatus();
   }
 
+  virtual void PostInsert(const Object& inserted) const {}
+  virtual void PreUpdate(const Object& existing, const Object& updated) const {}
+  virtual void PreRemove(const Object& removed) const {}
+
   virtual std::vector<ObjectIndexT*> Indexes() = 0;
   virtual std::vector<const ObjectValidatorT*> Validators() const = 0;
 
@@ -96,7 +100,7 @@ class ObjectIndex : public ObjectIndexInterface<Object> {
   void UpdateIndex(Object* o, const Object& updated) override;
   void RemoveFromIndex(Object* o) override;
 
-  std::vector<Object*> FindAll(const KeyType& key) const;
+  std::vector<const Object*> FindAll(const KeyType& key) const;
   Object* FindOne(const KeyType& key) const;
   bool Contains(const KeyType& key) const;
 
@@ -111,7 +115,10 @@ absl::StatusOr<int64_t> ObjectManager<Object>::Insert(
     std::unique_ptr<Object> inserted) {
   RETURN_IF_ERROR(ValidateInsertSuper(*inserted));
   for (auto* index : Indexes()) index->AddToIndex(inserted.get());
-  return objects_.Insert(std::move(inserted));
+  Object* object = inserted.get();
+  int64_t id = objects_.Insert(std::move(inserted));
+  PostInsert(*object);
+  return id;
 }
 
 template <class Object>
@@ -123,6 +130,7 @@ absl::Status ObjectManager<Object>::Update(const Object& updated) {
   }
   RETURN_IF_ERROR(ValidateUpdateSuper(*existing, updated));
   for (auto* index : Indexes()) index->UpdateIndex(existing, updated);
+  PreUpdate(*existing, updated);
   *existing = updated;
   return absl::OkStatus();
 }
@@ -136,6 +144,7 @@ absl::Status ObjectManager<Object>::Remove(const int64_t id) {
   }
   RETURN_IF_ERROR(ValidateRemove(*stored));
   for (auto* index : Indexes()) index->RemoveFromIndex(stored);
+  PreRemove(stored);
   objects_.Remove(id);
   return absl::OkStatus();
 }
@@ -166,9 +175,9 @@ void ObjectIndex<Object, Getter>::RemoveFromIndex(Object* o) {
 }
 
 template <class Object, auto Getter>
-std::vector<Object*> ObjectIndex<Object, Getter>::FindAll(
+std::vector<const Object*> ObjectIndex<Object, Getter>::FindAll(
     const KeyType& key) const {
-  std::vector<Object*> objects;
+  std::vector<const Object*> objects;
   auto range = index_.equal_range(key);
   for (auto it = range.first; it != range.second; ++it) {
     objects.push_back(it->second);

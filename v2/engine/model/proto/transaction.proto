@@ -8,7 +8,7 @@ message Transaction {
 
   // [Required] Date in YYYYMMDD format (stored as integer). 
   // Ex: 20010221 => 2001-02-21.
-  optional int32 date = 2;
+  optional uint32 date = 2;
 
   // [Optional] Transaction reference number (ex: confirmation #).
   optional string reference_number = 3;

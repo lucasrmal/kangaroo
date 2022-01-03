@@ -19,13 +19,10 @@
 
 #include "model/commodity-manager.h"
 
-#include "model/institution-manager.h"
-
 namespace kangaroo::model {
 
-CommodityManager* CommodityManager::instance_ = new CommodityManager();
-
-Commodity* CommodityManager::FindBySymbol(const std::string& symbol) const {
+const Commodity* CommodityManager::FindBySymbol(
+    const std::string& symbol) const {
   return symbol_index_.FindOne(symbol);
 }
 
@@ -45,6 +42,9 @@ absl::Status CommodityManager::ValidateInsert(
       return absl::InvalidArgumentError(
           "Security must have a traded currency.");
     }
+    if (!Security::Type_IsValid(commodity.security().type())) {
+      return absl::InvalidArgumentError("Invalid security type.");
+    }
     if (const Commodity* curr =
             Get(commodity.security().has_traded_currency_id());
         curr == nullptr || !curr->has_currency()) {
@@ -55,7 +55,7 @@ absl::Status CommodityManager::ValidateInsert(
       return absl::UnimplementedError("Must Check This!");
     }
     if (commodity.security().has_provider_institution_id() &&
-        !InstitutionManager::instance()->Get(
+        !institution_manager_->Get(
             commodity.security().has_provider_institution_id())) {
       return absl::InvalidArgumentError("Provider instition does not exist.");
     }
@@ -66,6 +66,15 @@ absl::Status CommodityManager::ValidateInsert(
   }
 
   return absl::OkStatus();
+}
+
+absl::Status CommodityManager::ValidateUpdate(const Commodity& before,
+                                              const Commodity& after) const {
+  if ((before.has_currency() && !after.has_currency()) ||
+      (before.has_security() && !after.has_security())) {
+    return absl::InvalidArgumentError("Commodity type may not be changed.");
+  }
+  return ValidateInsert(after);
 }
 
 absl::Status CommodityManager::ValidateRemove(

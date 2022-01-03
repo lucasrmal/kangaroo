@@ -22,8 +22,6 @@
 
 namespace kangaroo::model {
 
-InstitutionManager* InstitutionManager::instance_ = new InstitutionManager();
-
 std::vector<std::string> InstitutionManager::CountriesInUse() const {
   std::unordered_set<std::string> countries;
   for (auto it = objects_.iterator(); it != objects_.iterator_end(); ++it) {

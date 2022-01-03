@@ -17,284 +17,113 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  US
  */
 
-#ifndef LEDGER_H
-#define LEDGER_H
+#ifndef MODEL_LEDGER_H
+#define MODEL_LEDGER_H
 
-#include <QMultiMap>
-#include <QHash>
-#include <QDate>
-#include <QLinkedList>
-#include "transaction.h"
-#include "../interfaces/scriptable.h"
-//#include "../util/augmentedtreapmap.h"
-#include "../util/fragmentedtreapmap.h"
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
-namespace KLib {
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
+#include "model/proto/transaction.pb.h"
+#include "model/types/date.h"
+#include "util/augmented-treap-map.h"
 
-    typedef QPair<int, int> SplitFraction;
+namespace kangaroo::model {
 
-    //Specialize for Balances
-    namespace AugmentedTreapSum
-    {
-        template<>
-        bool isEmpty<Balances>(const Balances& _s);
+class Ledger {
+ public:
+  using LedgerKey =
+      std::pair<const Transaction*, int64_t>;  // <Transaction, AccountId>
+  using LedgerMap = AugmentedTreapMap<date_t, LedgerKey, int64_t>;
+  using LedgerIterator = LedgerMap::iterator;
+  using LedgerRange = std::pair<LedgerIterator, LedgerIterator>;
+  Ledger() = default;
 
-        template<>
-        Balances makeEmpty<Balances>();
+  // Returns the balance on `date`. Includes all transactions with date <=
+  // `date`.
+  int64_t BalanceAt(date_t date) const;
+
+  // Returns the balance today. Includes all transactions with date <= current.
+  int64_t BalanceToday() const;
+
+  // Returns the balance including all transactions. Include all future-dated
+  // transactions that are present.
+  int64_t BalanceToEnd() const;
+
+  // Returns the balance from `date` to the end. Include all future-dated
+  // transactions that are present.
+  int64_t BalanceFrom(date_t date) const;
+
+  // Equiv to balance(from) - balance(to-1)
+  int64_t BalanceBetween(date_t from, date_t to) const;
+
+  LedgerRange TransactionsBetween(std::optional<date_t> from,
+                                  std::optional<date_t> to) const;
+
+  // *
+  //   @brief costBasisAt
+  //   Only relevant for investment account ledgers.
+
+  //   @param[in] _date Only consider transactions at or before _date. If
+  //   invalid, all transactions are considered.
+  //   @return The cost basis for all the shares in the account at _date
+
+  // int64_t costBasisAt(date_t _date) const;
+
+  // int64_t costBasisBefore(const KLib::Transaction* _tr) const;
+
+  // int64_t costBasis() const { return costBasisBefore(nullptr); }
+
+  // Returns the balance before `transaction`; transactions are ordered by date.
+  // This may include some transactions with date equal to
+  // `transaction->date()`.
+  int64_t BalanceBefore(const Transaction* transaction,
+                        int64_t account_id) const;
+
+  date_t FirstTransactionDate() const;
+  date_t LastTransactionDate() const;
+
+  size_t size() const { return transactions_.size(); }
+  bool empty() const { return transactions_.empty(); }
+
+ private:
+  LedgerMap transactions_;
+
+  friend class LedgerManager;
+};
+
+class LedgerManager {
+ public:
+  const Ledger* Find(int64_t account_id) const {
+    auto it = ledgers_.find(account_id);
+    return it == ledgers_.end() ? nullptr : it->second.get();
+  }
+
+ private:
+  Ledger* AddLedger(int64_t account_id) {
+    auto it = ledgers_.find(account_id);
+    if (it == ledgers_.end()) {
+      it = ledgers_.insert({account_id, std::make_unique<Ledger>()}).first;
     }
+    return it->second.get();
+  }
+  void RemoveLedger(int64_t account_id) { ledgers_.erase(account_id); }
 
-    //Specialize for SplitFraction
-    namespace FragmentedTreap
-    {
-        template<>
-        Balances transform<SplitFraction, Balances>(const SplitFraction& _ratio, const Balances& _previous);
+  void InsertTransaction(const Transaction& transaction);
+  void UpdateTransaction(const Transaction& existing,
+                         const Transaction& updated);
+  void RemoveTransaction(const Transaction& transaction);
 
-        template<>
-        SplitFraction makeEmpty<SplitFraction>();
+  absl::flat_hash_map<int64_t, std::unique_ptr<Ledger>> ledgers_;
 
-    }
+  friend class AccountManager;
+  friend class TransactionManager;
+};
 
-    class Account;    
-    class InvestmentTransaction;
-    enum class InvestmentAction;
+}  // namespace kangaroo::model
 
-    typedef FragmentedTreapMap1<QDate, Transaction*, SplitFraction,  Balances> LedgerMap;
-    typedef LedgerMap::const_iterator TransactionIterator;
-    typedef std::pair<TransactionIterator, TransactionIterator> TransactionRange;
-
-    class Ledger : public QObject
-    {
-        Q_OBJECT
-        K_SCRIPTABLE(Ledger)
-
-        Q_PROPERTY(int count READ count)
-        Q_PROPERTY(int idAccount READ idAccount)
-
-        public:
-            Ledger(KLib::Account* _account);
-
-            virtual ~Ledger() {}
-
-            Q_INVOKABLE const LedgerMap* transactions() const { return &m_transactions; }
-
-            /**
-              @brief balanceAt
-
-              @param _date Only consider transactions at or before _date. If invalid, all transactions are considered.
-              @param _currency Balance in a specific currency.
-              @return The balance at the end of the day on _date.
-             *
-             * If _currency is specified, returns only the balance in _currency. Otherwise, returns the combined
-             * balance in the account's main currency.
-            */
-            Q_INVOKABLE KLib::Amount balanceAt(const QDate& _date, const QString& _currency = QString()) const;
-
-            /**
-             * @brief Today's balance
-             * @param _currency Balance in a specific currency.
-             * @return The balance
-             *
-             * If _currency is specified, returns only the balance in _currency. Otherwise, returns the combined
-             * balance in the account's main currency.
-             */
-            Q_INVOKABLE  KLib::Amount balanceToday(const QString& _currency = QString()) const;
-
-            /**
-              @brief Balance including all the transactions in the account, including future ones.
-             * @param _currency Balance in a specific currency.
-
-              @return The balance.
-             *
-             * If _currency is specified, returns only the balance in _currency. Otherwise, returns the combined
-             * balance in the account's main currency.
-            */
-            Q_INVOKABLE KLib::Amount balance(const QString& _currency = QString()) const;
-
-            /**
-             * @brief Today's balance
-             * @param _currency Balance in a specific currency.
-             * @return The balance
-
-              @return The balances for all currencies in the account.
-             */
-            Q_INVOKABLE Balances balancesToday() const { return m_transactions.sumTo(QDate::currentDate()); }
-
-            /**
-              @brief Balance including all the transactions in the account, including future ones.
-
-              @return The balances for all currencies in the account.
-            */
-
-            Q_INVOKABLE Balances balances() const { return m_transactions.sum(); }
-
-            /**
-              @brief balanceBetween
-
-              @return The difference between the balance after to and the balance before from.
-              (from beginning of day _from to end of day on _to).
-            */
-            Q_INVOKABLE KLib::Amount balanceBetween(const QDate& _from, const QDate& _to, const QString& _currency = QString()) const;
-
-
-            Balances balancesBetween(const QDate& _from, const QDate& _to) const;
-
-            Q_INVOKABLE QLinkedList<KLib::Transaction*> transactionsBetween(const QDate& _from, const QDate& _to) const;
-
-            /**
-              @brief costBasisAt
-              Only relevant for investment account ledgers.
-
-              @param[in] _date Only consider transactions at or before _date. If invalid, all transactions are considered.
-              @return The cost basis for all the shares in the account at _date
-            */
-            Q_INVOKABLE KLib::Amount costBasisAt(const QDate& _date) const;
-
-            Q_INVOKABLE KLib::Amount costBasisBefore(const KLib::Transaction* _tr) const;
-
-            Q_INVOKABLE KLib::Amount costBasis() const { return costBasisBefore(nullptr); }
-
-            /**
-              @brief Returns the balance, converted to _currency, of the account until _tr (exclusive).
-            */
-            Q_INVOKABLE KLib::Amount balanceBefore(const KLib::Transaction* _tr, const QString& _currency = QString()) const;
-
-            /**
-              @brief Returns the balances of the account until _tr (exclusive).
-            */
-            Q_INVOKABLE Balances balancesBefore(const KLib::Transaction* _tr) const;
-
-
-            Q_INVOKABLE QDate firstTransactionDate() const;
-            Q_INVOKABLE QDate lastTransactionDate() const;
-
-            int count() const { return m_transactions.size(); }
-
-            QSet<QString> currenciesUsed(const QDate& _from = QDate(), const QDate& _to = QDate()) const;
-
-            /**
-             * @brief idAccount
-             * @return This ledger's account ID.
-             */
-            int idAccount() const;
-
-            /**
-             * @brief cccount
-             * @return This ledger's account.
-             */
-            Q_INVOKABLE KLib::Account* account() const { return m_account; }
-
-
-        signals:
-            void modified();
-
-        private:            
-            TransactionRange    transactionRange(const QDate& _begin, const QDate& _end) const;
-            Amount              balanceIn(const Balances& _balances, const QString& _currency, const QDate& _date) const;
-
-            Balances balancesBefore(const KLib::Transaction* _tr, QDate& _lastDate) const;
-
-            Account* m_account;
-
-            LedgerMap     m_transactions;
-            QHash<int, QDate>  m_splits;
-
-            friend class LedgerManager;
-
-            /*
-             * HOW STOCK SPLITS ARE HANDLED
-             *
-             * Store list of splits ordered by date, with original fraction. When a change occurs, check the list of splits,
-             * for each split after, update the balance accordingly.
-             *
-             * When split fraction changes, new split is added, or split is removed, compute the difference in the balance and
-             * adjust it accordingly.
-             *
-             * Thus, the current-day and full balances are always up-to-date, using the split adjusted amount.     *
-             *
-             */
-    };
-
-    class LedgerManager : public QObject
-    {
-        Q_OBJECT
-        K_SCRIPTABLE(LedgerManager)
-
-        LedgerManager() {}
-
-        public:
-
-            ~LedgerManager() {}
-
-//            Q_INVOKABLE KLib::Transaction* addTransaction(const QDate& _date,
-//                                                          QList<KLib::Transaction::Split> _splits,
-//                                                          const QString& _no = QString(),
-//                                                          int _idPayee = Constants::NO_ID,
-//                                                          const QString& _memo = QString(),
-//                                                          const QHash<QString, QVariant>& _properties = QHash<QString, QVariant>());
-
-            /**
-              @brief Adds a transaction (can be an investment transaction).
-
-              The transaction will be added to the ledger (OR deleted if an exception arises).
-
-              The transaction must not have been added before (id is invalid) It WILL NOT be deleted if ID is valid.
-
-              It will be added to the investment lots manager if necessary,
-
-              Do NOT delete it after calling this function, even if it fails (throws an exception).
-              It will be handled by LedgerManager from now on.
-            */
-            Q_INVOKABLE KLib::Transaction* addTransaction(Transaction* _tr);
-
-            Q_INVOKABLE void removeTransaction(int _id);
-
-            Q_INVOKABLE KLib::Ledger* ledger(int _idAccount) const { return m_ledgers[_idAccount]; }
-
-            static LedgerManager* instance() { return m_instance; }
-
-        signals:
-            void transactionDateChanged(KLib::Transaction* _tr, const QDate& _old);
-            void splitAmountChanged(const KLib::Transaction::Split& _split, KLib::Transaction* _tr);
-            void splitAdded(const KLib::Transaction::Split& _split, KLib::Transaction* _tr);
-            void splitRemoved(const KLib::Transaction::Split& _split, KLib::Transaction* _tr);
-
-            void balanceChanged(int _idAccount, const Balances& _difference);
-            void balanceTodayChanged(int _idAccount, const Balances& _difference);
-
-        public slots:
-            void onSplitAdded(const KLib::Transaction::Split& _split);
-            void onSplitRemoved(const KLib::Transaction::Split& _split);
-            void onSplitAmountChanged(const KLib::Transaction::Split& _split);
-            void onTransactionDateChanged(const QDate& _old);
-            void onStockSplitAmountChanged();
-            void onInvestmentActionChanged(InvestmentAction _previous);
-
-        private:
-            void addAccount(Account* _acc);
-            void removeAccount(Account* _acc);
-
-            void removeStockSplit(InvestmentTransaction* _inv_tr);
-            void addStockSplit(InvestmentTransaction* _inv_tr);
-
-            void connectSignals(Transaction* _tr) const;
-            void connectInvestmentSignals(InvestmentTransaction* _tr) const;
-
-            void checkIfBalancesChanged(int _idAccount, const QDate& _date, const Balances& _prior);
-
-            void load();
-            void unload();
-
-            QHash<int, Ledger*> m_ledgers;
-
-            static LedgerManager* m_instance;
-            static const QDate m_today;
-
-            friend class Account;
-    };
-
-}
-
-Q_DECLARE_METATYPE(KLib::Ledger*)
-Q_DECLARE_METATYPE(KLib::LedgerManager*)
-
-#endif // LEDGER_H
+#endif  // MODEL_LEDGER_H

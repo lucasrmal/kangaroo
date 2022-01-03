@@ -32,6 +32,27 @@ class RequiredValidator : public ObjectValidatorInterface<Object> {
 };
 
 template <class Object, auto Getter>
+class BoolPropertyValidator : public ObjectValidatorInterface<Object> {
+ public:
+  using PropertyType = typename std::decay<
+      typename std::result_of<decltype(Getter)(Object)>::type>::type;
+
+  BoolPropertyValidator(const std::string& property_name)
+      : property_name_(property_name) {}
+
+  absl::Status Validate(const Object*, const Object& after) const override {
+    if (!(after.*Getter)()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat(property_name_, " is a required field."));
+    }
+    return absl::OkStatus();
+  }
+
+ private:
+  const std::string property_name_;
+};
+
+template <class Object, auto Getter>
 class UniqueValidator : public ObjectValidatorInterface<Object> {
  public:
   using PropertyType = typename std::decay<
@@ -57,13 +78,59 @@ class UniqueValidator : public ObjectValidatorInterface<Object> {
   const PropertyIndex* index_;
 };
 
-template <class Object>
-class IconIdValidator : public ObjectValidatorInterface<Object> {
+template <class Object, auto Getter, auto IsPresent, class Manager>
+class OptionalIdValidator : public ObjectValidatorInterface<Object> {
+ public:
+  using PropertyType = typename std::decay<
+      typename std::result_of<decltype(Getter)(Object)>::type>::type;
+  using PropertyIndex = ObjectIndex<Object, Getter>;
+
+  OptionalIdValidator(const std::string& property_name, const Manager* manager)
+      : property_name_(property_name), manager_(manager) {}
+
   absl::Status Validate(const Object* before,
                         const Object& after) const override {
-    return absl::UnimplementedError("Not Yet Implemented!");
+    if ((after.*IsPresent)() && !manager_->Get((after.*Getter)())) {
+      return absl::NotFoundError(absl::StrCat("Object with ", property_name_,
+                                              "=", (after.*Getter)(),
+                                              " does not exist."));
+    }
+    return absl::OkStatus();
   }
+
+ private:
+  const std::string property_name_;
+  const Manager* manager_;
 };
+
+template <class Object, auto Getter, auto IsPresent, class Manager>
+class RequiredIdValidator : public ObjectValidatorInterface<Object> {
+ public:
+  using PropertyType = typename std::decay<
+      typename std::result_of<decltype(Getter)(Object)>::type>::type;
+  using PropertyIndex = ObjectIndex<Object, Getter>;
+
+  RequiredIdValidator(const std::string& property_name, const Manager* manager)
+      : property_name_(property_name), manager_(manager) {}
+
+  absl::Status Validate(const Object* before,
+                        const Object& after) const override {
+    if ((after.*IsPresent)()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat(property_name_, " is a required field."));
+    } else if (!manager_->Get((after.*Getter)())) {
+      return absl::NotFoundError(absl::StrCat("Object with ", property_name_,
+                                              "=", (after.*Getter)(),
+                                              " does not exist."));
+    }
+    return absl::OkStatus();
+  }
+
+ private:
+  const std::string property_name_;
+  const Manager* manager_;
+};
+
 }  // namespace kangaroo::model
 
 #endif  // MODEL_VALIDATORS_H

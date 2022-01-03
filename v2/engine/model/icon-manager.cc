@@ -21,8 +21,6 @@
 
 namespace kangaroo::model {
 
-IconManager* IconManager::instance_ = new IconManager();
-
 std::string IconManager::PathForIcon(int64_t icon_id) const {
   const Icon* icon = Get(icon_id);
   return icon != nullptr ? icon->path() : "";

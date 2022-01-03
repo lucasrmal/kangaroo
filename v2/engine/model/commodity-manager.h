@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "model/institution-manager.h"
 #include "model/object-manager.h"
 #include "model/proto/commodity.pb.h"
 #include "model/validators.h"
@@ -39,19 +40,19 @@ struct WorldCurrency {
 
 class CommodityManager : public ObjectManager<Commodity> {
  public:
-  Commodity* FindBySymbol(const std::string& symbol) const;
+  explicit CommodityManager(InstitutionManager* institution_manager)
+      : institution_manager_(institution_manager) {}
+
+  const Commodity* FindBySymbol(const std::string& symbol) const;
 
   static const std::vector<WorldCurrency>& WorldCurrencies();
-  static CommodityManager* instance() { return instance_; }
 
   static constexpr int kMaxDecimalPlaces = 6;
 
  protected:
   absl::Status ValidateInsert(const Commodity& commodity) const override;
   absl::Status ValidateUpdate(const Commodity& before,
-                              const Commodity& after) const override {
-    return ValidateInsert(after);
-  }
+                              const Commodity& after) const override;
   absl::Status ValidateRemove(const Commodity& commodity) const override;
 
   std::vector<ObjectIndexT*> Indexes() override { return {&symbol_index_}; }
@@ -60,13 +61,13 @@ class CommodityManager : public ObjectManager<Commodity> {
   }
 
  private:
+  InstitutionManager* institution_manager_;
+
   ObjectIndex<Commodity, &Commodity::symbol> symbol_index_;
   RequiredValidator<Commodity, &Commodity::name> required_name_validator_ = {
       "name"};
   UniqueValidator<Commodity, &Commodity::symbol> unique_symbol_validator_ = {
       "symbol", &symbol_index_};
-
-  static CommodityManager* instance_;
 };
 
 }  // namespace kangaroo::model

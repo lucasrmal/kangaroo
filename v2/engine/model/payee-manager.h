@@ -24,27 +24,30 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "model/icon-manager.h"
 #include "model/object-manager.h"
 #include "model/proto/payee.pb.h"
 #include "model/proto/transaction.pb.h"
+#include "model/validator-helpers.h"
 #include "model/validators.h"
 
 namespace kangaroo::model {
 
 class PayeeManager : public ObjectManager<Payee> {
  public:
+  explicit PayeeManager(IconManager* icon_manager)
+      : icon_id_validator_(icon_manager) {}
+
   std::vector<const Transaction*> TransactionsForPayee(int64_t payee_id) const;
 
   std::vector<std::string> CountriesInUse() const;
-  Payee* FindByName(const std::string& name) const;
+  const Payee* FindByName(const std::string& name) const;
   /**
    * @brief merge Merge a set of payees into a single one
    * @param _ids The IDs of payees to merge together
    * @param _idTo The destination payee id. Must be included in _ids.
    */
   absl::Status Merge(const std::vector<int64_t>& from, int64_t to);
-
-  static PayeeManager* instance() { return instance_; }
 
  protected:
   absl::Status ValidateRemove(const Payee& payee) const override;
@@ -62,8 +65,6 @@ class PayeeManager : public ObjectManager<Payee> {
   UniqueValidator<Payee, &Payee::name> unique_name_validator_ = {"name",
                                                                  &name_index_};
   IconIdValidator<Payee> icon_id_validator_;
-
-  static PayeeManager* instance_;
 };
 
 }  // namespace kangaroo::model

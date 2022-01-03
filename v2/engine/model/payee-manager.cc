@@ -21,8 +21,6 @@
 
 namespace kangaroo::model {
 
-PayeeManager* PayeeManager::instance_ = new PayeeManager();
-
 std::vector<std::string> PayeeManager::CountriesInUse() const {
   std::unordered_set<std::string> countries;
   for (auto it = objects_.iterator(); it != objects_.iterator_end(); ++it) {
@@ -32,7 +30,7 @@ std::vector<std::string> PayeeManager::CountriesInUse() const {
   return std::vector<std::string>(countries.begin(), countries.end());
 }
 
-Payee* PayeeManager::FindByName(const std::string& name) const {
+const Payee* PayeeManager::FindByName(const std::string& name) const {
   return name_index_.FindOne(name);
 }
 
