@@ -1,4 +1,11 @@
 cc_library(
+  name = "augmented-treap-map",
+  hdrs = ["augmented-treap-map.h"],
+  deps = ["//util/treap:treap-internal"],
+  visibility = ["//visibility:public"],
+)
+
+cc_library(
   name = "indexed-vector",
   hdrs = ["indexed-vector.h"],
   visibility = ["//visibility:public"],
