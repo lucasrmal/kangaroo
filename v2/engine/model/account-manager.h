@@ -43,7 +43,8 @@ class AccountManager : public ObjectManager<Account> {
  public:
   explicit AccountManager(CommodityManager* commodity_manager,
                           IconManager* icon_manager,
-                          InstitutionManager* institution_manager);
+                          InstitutionManager* institution_manager,
+                          LedgerManager* ledger_manager);
 
   const Account* Root() const { return root_; }
 
@@ -58,6 +59,9 @@ class AccountManager : public ObjectManager<Account> {
   std::string ColonSeparatedPath(const Account& to, int length = -1) const;
 
  protected:
+  void PostInsert(const Transaction& inserted) const override;
+  void PreRemove(const Transaction& removed) const override;
+
   absl::Status ValidateInsert(const Account& account) const override;
   absl::Status ValidateUpdate(const Account& existing,
                               const Account& updated) const override;
@@ -74,6 +78,7 @@ class AccountManager : public ObjectManager<Account> {
   CommodityManager* commodity_manager_;
   IconManager* icon_manager_;
   InstitutionManager* institution_manager_;
+  LedgerManager* ledger_manager_;
   Account* root_ = nullptr;
 
   BoolPropertyValidator<Account, &Account::has_type> required_type_validator_ =

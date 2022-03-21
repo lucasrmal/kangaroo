@@ -79,6 +79,12 @@ std::string AccountManager::ColonSeparatedPath(const Account& to,
   return path;
 }
 
+void AccountManager::PostInsert(const Transaction& inserted) const {
+  ledger_manager_->
+}
+
+void AccountManager::PreRemove(const Transaction& removed) const {}
+
 absl::Status AccountManager::ValidateCommon(const Account& account) const {
   const Account* parent = Get(account.parent_id());
   if (!account_helper::TypeCanBeChild(account.type(), /*of=*/parent->type())) {

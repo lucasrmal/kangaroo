@@ -1,6 +1,6 @@
 /*
  * Augmented Treap Map
- * Copyright (C) 2015 Lucas Rioux-Maldague
+ * Copyright (C) 2022 Lucas Rioux-Maldague
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
