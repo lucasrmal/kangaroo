@@ -8,7 +8,7 @@ QMAKE_CXXFLAGS += -std=c++11
 TARGET = kangaroo
 
 TEMPLATE = lib
-CONFIG += dll
+#CONFIG += dll
 DESTDIR = ../Kangaroo/lib
 
 VERSION = 0.1
@@ -24,6 +24,28 @@ INCLUDEPATH += /usr/local/include /include
 FORMS += ui/actionmanager/qttoolbardialog.ui
 
 SOURCES += \
+    lib/muparser/muParser.cpp \
+    lib/muparser/muParserBase.cpp \
+    lib/muparser/muParserBytecode.cpp \
+    lib/muparser/muParserCallback.cpp \
+    lib/muparser/muParserDLL.cpp \
+    lib/muparser/muParserError.cpp \
+    lib/muparser/muParserInt.cpp \
+    lib/muparser/muParserTest.cpp \
+    lib/muparser/muParserTokenReader.cpp \
+    lib/quazip/JlCompress.cpp \
+    lib/quazip/qioapi.cpp \
+    lib/quazip/quaadler32.cpp \
+    lib/quazip/quacrc32.cpp \
+    lib/quazip/quagzipfile.cpp \
+    lib/quazip/quaziodevice.cpp \
+    lib/quazip/quazip.cpp \
+    lib/quazip/quazipdir.cpp \
+    lib/quazip/quazipfile.cpp \
+    lib/quazip/quazipfileinfo.cpp \
+    lib/quazip/quazipnewinfo.cpp \
+    lib/quazip/unzip.c \
+    lib/quazip/zip.c \
     model/account.cpp \
     model/institution.cpp \
     model/stored.cpp \
@@ -62,18 +84,10 @@ SOURCES += \
     model/pricemanager.cpp \
     ui/dialogs/spliteditor.cpp \
     ui/widgets/splitswidget.cpp \
-    util/array.cpp \
-    util/ArrayDeque.cpp \
-    util/BinarySearchTree.cpp \
-    util/BinaryTree.cpp \
-    util/Treap.cpp \
-    util/utils.cpp \
     controller/pricecontroller.cpp \
     controller/onlinequotes.cpp \
     ui/dialogs/formcurrencyexchange.cpp \
-    controller/scriptengine.cpp \
     controller/ledger/investmentledgercontroller.cpp \
-    ui/widgets/pdfviewer.cpp \
     controller/reportgenerator.cpp \
     ui/widgets/chart.cpp \
     ui/widgets/calculator.cpp \
@@ -115,6 +129,36 @@ SOURCES += \
     model/budget.cpp
 
 HEADERS += \
+    interfaces/scriptable.h \
+    lib/muparser/muParser.h \
+    lib/muparser/muParserBase.h \
+    lib/muparser/muParserBytecode.h \
+    lib/muparser/muParserCallback.h \
+    lib/muparser/muParserDLL.h \
+    lib/muparser/muParserDef.h \
+    lib/muparser/muParserError.h \
+    lib/muparser/muParserFixes.h \
+    lib/muparser/muParserInt.h \
+    lib/muparser/muParserTemplateMagic.h \
+    lib/muparser/muParserTest.h \
+    lib/muparser/muParserToken.h \
+    lib/muparser/muParserTokenReader.h \
+    lib/quazip/JlCompress.h \
+    lib/quazip/crypt.h \
+    lib/quazip/ioapi.h \
+    lib/quazip/quaadler32.h \
+    lib/quazip/quachecksum32.h \
+    lib/quazip/quacrc32.h \
+    lib/quazip/quagzipfile.h \
+    lib/quazip/quaziodevice.h \
+    lib/quazip/quazip.h \
+    lib/quazip/quazip_global.h \
+    lib/quazip/quazipdir.h \
+    lib/quazip/quazipfile.h \
+    lib/quazip/quazipfileinfo.h \
+    lib/quazip/quazipnewinfo.h \
+    lib/quazip/unzip.h \
+    lib/quazip/zip.h \
     model/account.h \
     amount.h \
     amount.hpp \
@@ -157,20 +201,11 @@ HEADERS += \
     ui/dialogs/spliteditor.h \
     ui/widgets/splitswidget.h \
     interfaces/iquote.h \
-    util/array.h \
-    util/ArrayDeque.h \
-    util/BinarySearchTree.h \
-    util/BinaryTree.h \
-    util/Treap.h \
-    util/utils.h \
-    util/treapmap.h \
     controller/pricecontroller.h \
     controller/onlinequotes.h \
     ui/dialogs/formcurrencyexchange.h \
-    controller/scriptengine.h \
     interfaces/scriptable.h \
     controller/ledger/investmentledgercontroller.h \
-    ui/widgets/pdfviewer.h \
     controller/reportgenerator.h \
     ui/widgets/chart.h \
     ui/widgets/calculator.h \
@@ -218,3 +253,14 @@ unix {
     target.path = /usr/lib
     INSTALLS += target
 }
+
+SUBDIRS += \
+    lib/quazip/quazip.pro
+
+DISTFILES += \
+    lib/quazip/quazip.pri \
+    lib/quazip/quazip.sln \
+    lib/quazip/quazip.vcproj \
+    lib/quazip/quazip.vcxproj \
+    lib/quazip/quazip.vcxproj.filters \
+    lib/quazip/run_moc.bat

@@ -11,6 +11,7 @@
 #include <KangarooLib/controller/reportgenerator.h>
 #include <QMessageBox>
 #include <QDate>
+#include <QDebug>
 
 using namespace KLib;
 

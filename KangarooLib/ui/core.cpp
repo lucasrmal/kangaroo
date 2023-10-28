@@ -50,6 +50,7 @@
 
 #include <iostream>
 #include <QApplication>
+#include <QCoreApplication>
 #include <QPluginLoader>
 #include <QDateEdit>
 #include <QDir>
@@ -72,12 +73,12 @@ namespace KLib
     Core* Core::m_instance = nullptr;
     QHash<Path, QString> Core::m_paths = QHash<Path, QString>();
 
-    const QString Core::APP_VERSION     = "0.99.5 (Beta)";
+    const QString Core::APP_VERSION     = "1.1.99 (Beta)";
     const QString Core::APP_CODENAME    = "Red";
     const QString Core::APP_NAME        = "Kangaroo";
     const QString Core::APP_AUTHOR      = "Lucas Rioux-Maldague";
     const QString Core::APP_WEBSITE     = "";
-    const QString Core::APP_COPYRIGHT   = "(C) 2015 Lucas Rioux-Maldague";
+    const QString Core::APP_COPYRIGHT   = "(C) 2023 Lucas Rioux-Maldague";
 
     Core::Core() : m_mainWindow(new MainWindow()),
                    m_calculator(nullptr)

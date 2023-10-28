@@ -1,6 +1,5 @@
 #include "reportgenerator.h"
 #include "io.h"
-#include "scriptengine.h"
 
 #include <QDir>
 #include <QFile>
@@ -95,10 +94,10 @@ namespace KLib
         //Generate the HTML code
         QString output;
 
-        if (!ScriptEngine::instance()->execute(_additionalStatement + fullCode, output))
-        {
-            throw IOException(QObject::tr("An error has occured while executing the script:\n%1").arg(output));
-        }
+//        if (!ScriptEngine::instance()->execute(_additionalStatement + fullCode, output))
+//        {
+//            throw IOException(QObject::tr("An error has occured while executing the script:\n%1").arg(output));
+//        }
 
         //Return the HTML code
         return output;

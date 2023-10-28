@@ -22,6 +22,7 @@
 
 #include <QLinkedList>
 #include <QString>
+#include <QSet>
 #include <functional>
 #include "../amount.h"
 #include "../interfaces/scriptable.h"

@@ -30,6 +30,7 @@
 #ifndef TREAPUTIL_H
 #define TREAPUTIL_H
 
+#include <cstdlib>
 #include <utility>
 #include <assert.h>
 
@@ -37,19 +38,19 @@ namespace KLib
 {
     namespace AugmentedTreapSum
     {
-        template<class S>
+        template<typename S>
         bool isEmpty(const S& _s) {
             return _s != 0;
         }
 
-        template<class S>
+        template<typename S>
         S makeEmpty() {
             return S(0);
         }
 
     }
 
-    template<class K, class V, class S>
+    template<typename K, typename V, typename S>
     struct AugmentedTreapNode
     {
         struct Node
@@ -287,7 +288,7 @@ namespace KLib
         AugmentedTreapNode<K,V,S>* right;
     };
 
-    template<class K,class V, class Node>
+    template<typename K,typename V, typename Node>
     struct TreapUtil
     {
         typedef const K&  const_key;
@@ -328,7 +329,7 @@ namespace KLib
         };
     };
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     Node* TreapUtil<K,V, Node>::findFirstNode(Node* root)
     {
         Node* cur = root;
@@ -341,7 +342,7 @@ namespace KLib
         return cur;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     Node* TreapUtil<K,V, Node>::findLastNode(Node* root)
     {
         Node* cur = root;
@@ -354,7 +355,7 @@ namespace KLib
         return cur;
     }
 
-    template<class K, class V, class Node> //First node with value > w, nullptr if none.
+    template<typename K, typename V, typename Node> //First node with value > w, nullptr if none.
     Node* TreapUtil<K,V, Node>::findUpperBound(const_key _key, Node* root)
     {
         Node* cur = root;
@@ -376,7 +377,7 @@ namespace KLib
         return bestUB;
     }
 
-    template<class K, class V, class Node> //First node with value >= w, nullptr if none.
+    template<typename K, typename V, typename Node> //First node with value >= w, nullptr if none.
     Node* TreapUtil<K,V, Node>::findLowerBound(const_key _key, Node* root)
     {
         Node* cur = root;
@@ -402,7 +403,7 @@ namespace KLib
         return bestLB;
     }
 
-    template<class K, class V, class Node> //First node with value >= w, nullptr if none.
+    template<typename K, typename V, typename Node> //First node with value >= w, nullptr if none.
     Node* TreapUtil<K,V, Node>::findEQ(const_key _key, Node* root)
     {
         Node* cur = root;
@@ -426,7 +427,7 @@ namespace KLib
         return cur;
     }
 
-    template<class K, class V, class Node> //First node with value >= w, nullptr if none.
+    template<typename K, typename V, typename Node> //First node with value >= w, nullptr if none.
     typename TreapUtil<K,V, Node>::node_sub_pair
     TreapUtil<K,V, Node>::findEQ(const_key _key, const_reference _val, Node* root)
     {
@@ -445,7 +446,7 @@ namespace KLib
         return node_sub_pair(nullptr, nullptr);
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::doClear(Node** root)
     {
         Node* u = *root, *prev = nullptr, *next;
@@ -500,7 +501,7 @@ namespace KLib
     /**
      * Splits in two parts: Treap with keys < than x, and treap with keys >= x.
      */
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     Node* TreapUtil<K,V, Node>::doSplit(const_key _key, Node** root)
     {
         Node* u = findLowerBound(_key, *root);
@@ -549,7 +550,7 @@ namespace KLib
         return otherRoot;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool TreapUtil<K,V, Node>::doMerge(Node** root, Node** otherRoot)
     {
         if (!*otherRoot)
@@ -590,7 +591,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::splice(Node *u, Node** root)
     {
         assert(u != nullptr);
@@ -631,7 +632,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::rotateRight(Node *u, Node** root)
     {
         assert(u != nullptr);
@@ -682,7 +683,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::rotateLeft(Node *u, Node** root)
     {
         assert(u != nullptr);
@@ -734,7 +735,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::doInsert(Node* u, Node** root)
     {
         assert(u != nullptr);
@@ -829,7 +830,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K, V, Node>::doRemove(Node* u, Node** root, typename Node::Node* v)
     {
         assert(u != nullptr);
@@ -861,7 +862,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::bubbleUp(Node *u, Node** root)
     {
         assert(u != nullptr);
@@ -884,7 +885,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void TreapUtil<K,V, Node>::trickleDown(Node *u, Node** root)
     {
         assert(u != nullptr);
@@ -915,7 +916,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     typename TreapUtil<K,V, Node>::weight_type
     TreapUtil<K,V, Node>::leftSum(const_key _to, bool inclusive, Node* root)
     {
@@ -954,7 +955,7 @@ namespace KLib
         return sum;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     typename TreapUtil<K,V, Node>::weight_type
     TreapUtil<K,V, Node>::leftSum(Node* cur, typename Node::Node* sub, bool inclusive, Node* root)
     {
@@ -995,7 +996,7 @@ namespace KLib
         return sum;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     typename TreapUtil<K,V, Node>::weight_type TreapUtil<K,V, Node>::rightSum(const_key _from, bool inclusive, Node* root)
     {
         Node* cur = root;

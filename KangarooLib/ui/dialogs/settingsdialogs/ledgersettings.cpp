@@ -4,7 +4,7 @@
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QFormLayout>
-#include "../../model/schedule.h"
+#include "model/schedule.h"
 
 namespace KLib
 {

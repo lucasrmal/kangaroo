@@ -21,11 +21,9 @@
 
 #include "../../controller/ledger/ledgercontroller.h"
 #include "../../controller/ledger/ledgercontrollermanager.h"
-#include "../../controller/payeecontroller.h"
 #include "../../model/account.h"
 #include "../../model/ledger.h"
 #include "../../model/modelexception.h"
-#include "../../model/payee.h"
 #include "../core.h"
 #include "../dialogs/optionsdialog.h"
 
@@ -620,11 +618,11 @@ void LedgerWidget::selectionChanged(const QItemSelection& _selected,
   QTreeView::selectionChanged(_selected, _deselected);
 
   // Check actions
-  checkEnableActions(selRows.toList());
+  checkEnableActions(selRows.values());
 
   if (deselectRows != selRows) {
     emit selectedRowsTotalChanged(tot);
-    emit selectedRowsChanged(selRows.toList());
+    emit selectedRowsChanged(selRows.values());
   }
 
   // Paint the overlay
@@ -706,6 +704,7 @@ void LedgerWidget::createBasicActions() {
     switch (ans) {
       case QMessageBox::Yes:
         this->submitEdit();
+        return true;
       case QMessageBox::No:
         return true;
       default:
@@ -929,7 +928,7 @@ QList<int> LedgerWidget::selectedRows() const {
     rows.insert(i.parent().isValid() ? i.parent().row() : i.row());
   }
 
-  return rows.toList();
+  return rows.values();
 }
 
 int LedgerWidget::newTransactionRow() const {

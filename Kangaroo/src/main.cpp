@@ -43,6 +43,13 @@ using namespace KLib;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    //--------------------General Configuration--------------------
+    QCoreApplication::setApplicationName(Core::APP_NAME);
+    QCoreApplication::setApplicationVersion(Core::APP_VERSION);
+    QCoreApplication::setOrganizationName(Core::APP_AUTHOR);
+    QCoreApplication::setOrganizationDomain(Core::APP_WEBSITE);
+
     Util::setupPaths();
 
     QFont f("Droid Sans [unknown]", 9);
@@ -56,12 +63,6 @@ int main(int argc, char *argv[])
     time_t t0 = time(NULL);
 
     a.processEvents();
-
-    //--------------------General Configuration--------------------
-    QCoreApplication::setApplicationName(Core::APP_NAME);
-    QCoreApplication::setApplicationVersion(Core::APP_VERSION);
-    QCoreApplication::setOrganizationName(Core::APP_AUTHOR);
-    QCoreApplication::setOrganizationDomain(Core::APP_WEBSITE);
 
     a.addLibraryPath(Core::path(Path_Plugins));
 

@@ -15,7 +15,7 @@
 # along with Kangaroo. If not, see <http://www.gnu.org/licenses/>.
 
 QMAKE_CXXFLAGS += -std=c++11
-QT += widgets script webkitwidgets printsupport
+QT += widgets script printsupport #webkitwidgets
 TARGET = TabInterface
 TEMPLATE = lib
 CONFIG       += plugin

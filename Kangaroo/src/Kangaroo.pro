@@ -29,7 +29,7 @@ OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
 TEMPLATE = app
-unix:LIBS += -L/lib64 -lpoppler-qt5 -lmuparser -lquazip5 -L$$PWD/../lib -lkangaroo
+unix:LIBS += -L/lib64 -L$$PWD/../lib -lkangaroo
       #-L/lib64
 # TRANSLATIONS += camseg_fr.ts \
 #     camseg_tr.ts

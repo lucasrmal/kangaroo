@@ -26,7 +26,7 @@
 #include <QSignalMapper>
 #include <QMessageBox>
 
-#include <muParser.h>
+#include "lib/muparser/muParser.h"
 
 #define CONST_PI 3.141592653589793238462643383279502884
 

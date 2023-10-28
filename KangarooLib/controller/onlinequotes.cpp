@@ -22,6 +22,7 @@
 #include "../model/security.h"
 #include "../model/modelexception.h"
 
+#include <QDebug>
 #include <stdexcept>
 
 namespace KLib

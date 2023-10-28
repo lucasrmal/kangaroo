@@ -21,9 +21,9 @@
 #include "../interfaces/ifilemanager.h"
 #include "io.h"
 
-#include <quazip5/quazip.h>
-#include <quazip5/quazipfile.h>
-#include <quazip5/quazipfileinfo.h>
+#include "lib/quazip/quazip.h"
+#include "lib/quazip/quazipfile.h"
+#include "lib/quazip/quazipfileinfo.h"
 
 #include <QDebug>
 

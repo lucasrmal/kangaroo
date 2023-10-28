@@ -21,7 +21,7 @@
 #define ISTORED_H
 
 #include "../klib.h"
-#include "../interfaces/scriptable.h"
+//#include "../interfaces/scriptable.h"
 #include <QString>
 #include <QObject>
 
@@ -34,7 +34,7 @@ namespace KLib
     class IStored : public QObject
     {
         Q_OBJECT
-        K_SCRIPTABLE(IStored)
+//        K_SCRIPTABLE(IStored)
 
         Q_PROPERTY(int id READ id)
 

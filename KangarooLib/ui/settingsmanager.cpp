@@ -117,7 +117,7 @@ namespace KLib
 
     void SettingsManager::registerSetting(const QString& _key, const QVariant& _defaultValue)
     {
-        if (m_settings.contains(_key))
+        if (!m_settings.contains(_key))
         {
             m_settings.setValue(_key, _defaultValue);
         }

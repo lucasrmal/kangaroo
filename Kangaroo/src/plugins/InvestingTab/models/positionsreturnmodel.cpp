@@ -10,6 +10,7 @@
 #include <KangarooLib/model/account.h>
 #include <KangarooLib/model/modelexception.h>
 #include <cmath>
+#include <QDebug>
 
 using namespace KLib;
 

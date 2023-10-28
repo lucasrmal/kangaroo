@@ -10,11 +10,11 @@ SUBDIRS += TabInterface \
            YahooQuotes \
            UpdatePrices \
            Schedules \
-           Console \
+           # Console \
            FrequentAccounts \
            InvestmentCalculator \
            CreateBook \
-           TaxAssistant \
+           # TaxAssistant \
            Spreadsheets \
            Rewards \
            BookSettings \

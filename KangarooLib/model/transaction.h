@@ -22,10 +22,10 @@
 
 #include <QDate>
 #include <QLinkedList>
+#include <QSet>
 #include <QScriptEngine>
 #include "stored.h"
 #include "properties.h"
-#include "../interfaces/scriptable.h"
 #include "../amount.h"
 #include "../util/balances.h"
 
@@ -62,7 +62,6 @@ namespace KLib
     class Transaction : public IStored
     {
         Q_OBJECT
-        K_SCRIPTABLE(Transaction)
 
         Q_PROPERTY(int splitCount READ splitCount)
         Q_PROPERTY(QString no READ no WRITE setNo)
@@ -74,8 +73,6 @@ namespace KLib
 
         class Split
         {
-            K_SCRIPTABLE(Split)
-
         public:
 
             Split(const KLib::Amount& _amount, int _idAccount, const QString& _currency, const QString& _memo = QString()) :

@@ -31,7 +31,6 @@
 #define AMOUNT_H
 
 #include <QVariant>
-#include "interfaces/scriptable.h"
 
 namespace KLib {
 
@@ -40,8 +39,6 @@ namespace KLib {
     */
     class Amount
     {
-        K_SCRIPTABLE(Security)
-
         public:
                         Amount() :
                           m_baseAmount(0),
@@ -57,17 +54,6 @@ namespace KLib {
 
             Q_INVOKABLE Amount      inverse() const;
             Q_INVOKABLE Amount      abs() const;
-
-            static QScriptValue toScriptValue(QScriptEngine *engine, const Amount &a)
-            {
-              QScriptValue obj = engine->newVariant(a.toDouble());
-              return obj;
-            }
-
-            static void fromScriptValue(const QScriptValue &obj, Amount &a)
-            {
-              a = Amount(obj.toNumber());
-            }
 
             Amount      operator+(const Amount & p_amount) const;
             Amount      operator-(const Amount & p_amount) const;

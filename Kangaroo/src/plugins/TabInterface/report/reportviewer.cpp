@@ -1,6 +1,6 @@
 #include "reportviewer.h"
 
-#include <QWebView>
+//#include <QWebView>
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QPrintDialog>
@@ -38,8 +38,8 @@ ReportViewer::ReportViewer(Report* _report, const ReportSettings& _settings, QWi
     btnSaveAs->setFlat(true);
     btnReload->setFlat(true);
 
-    m_view = new QWebView(this);
-    m_view->settings()->setUserStyleSheetUrl(QUrl::fromLocalFile(Core::path(Path_Themes) + "report_style.css"));
+//    m_view = new QWebView(this);
+//    m_view->settings()->setUserStyleSheetUrl(QUrl::fromLocalFile(Core::path(Path_Themes) + "report_style.css"));
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch(2);
@@ -49,7 +49,7 @@ ReportViewer::ReportViewer(Report* _report, const ReportSettings& _settings, QWi
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addLayout(buttonLayout);
-    layout->addWidget(m_view, 1);
+//    layout->addWidget(m_view, 1);
 
     connect(btnPrint,  &QPushButton::clicked, this, &ReportViewer::print);
     connect(btnSaveAs, &QPushButton::clicked, this, &ReportViewer::saveAs);
@@ -59,7 +59,7 @@ ReportViewer::ReportViewer(Report* _report, const ReportSettings& _settings, QWi
 void ReportViewer::setContent(const QString& _htmlContent)
 {
     m_html = _htmlContent;
-    m_view->setHtml(_htmlContent);
+//    m_view->setHtml(_htmlContent);
 }
 
 void ReportViewer::reload()
@@ -78,7 +78,7 @@ void ReportViewer::print()
 
     if (p.exec() == QDialog::Accepted)
     {
-        m_view->print(m_printer);
+//        m_view->print(m_printer);
     }
 }
 
@@ -105,7 +105,7 @@ void ReportViewer::saveAs()
             printer.setPageMargins(1.0, 1.0, 1.0, 1.3, QPrinter::Inch);
             printer.setOutputFormat(QPrinter::PdfFormat);
             printer.setOutputFileName(path);
-            m_view->print(&printer);
+//            m_view->print(&printer);
         }
         else //html
         {

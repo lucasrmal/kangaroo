@@ -23,6 +23,7 @@
 #include<QString>
 #include <QVector>
 #include <QList>
+#include <QHash>
 
 #include "stored.h"
 #include "../interfaces/scriptable.h"

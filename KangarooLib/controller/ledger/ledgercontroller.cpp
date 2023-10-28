@@ -1658,6 +1658,9 @@ LedgerWidgetDelegate::LedgerWidgetDelegate(const LedgerController* _controller,
       m_currentEditor(nullptr) {
   QSettings settings;
   m_rowHeight = settings.value("Ledger/RowHeight").toInt();
+//  if (m_rowHeight <= 0) {
+//    m_rowHeight = 26;
+//  }
 }
 
 void LedgerWidgetDelegate::paint(QPainter* _painter,

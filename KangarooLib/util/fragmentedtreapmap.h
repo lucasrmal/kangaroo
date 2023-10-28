@@ -30,19 +30,21 @@
 #ifndef FRAGMENTEDTREAPMAP_H
 #define FRAGMENTEDTREAPMAP_H
 
-#include "augmentedtreapmap.h"
+// #include "augmentedtreapmap.h"
+#include "treaputil.h"
 #include <list>
+#include <stdexcept>
 
 namespace KLib
 {
     namespace FragmentedTreap
     {
-        template<class R, class S>
+        template<typename R, typename S>
         S transform(const R& _ratio, const S& _previous) {
             return _ratio * _previous;
         }
 
-        template<class R>
+        template<typename R>
         R makeEmpty()
         {
             return 1;
@@ -50,7 +52,7 @@ namespace KLib
 
     }
 
-    template<class K, class R, class Node>
+    template<typename K, typename R, typename Node>
     class FragmentedTreapMapNode
     {
         public:
@@ -68,11 +70,238 @@ namespace KLib
             Node* root;
     };
 
-    //Forward-declaration of iterator
-    template<typename T, typename valuetype>
-    class FragmentedTreapMapIterator;
+//    //Forward-declaration of iterator
+//    template<typename T, typename valuetype>
+//    class FragmentedTreapMapIterator;
 
-    template<class K, class V, class R, class Node>
+    /* ####################################################################### */
+    /* Iterator */
+
+    template<typename T, typename value_ref>
+    class FragmentedTreapMapIterator
+    {
+            friend class T::const_iterator;
+
+            using node_list = const typename T::fnode_list&;
+            using node_iterator = typename T::const_fnode_iterator;
+            using node_type = typename T::node_type;
+            using subnode_type = typename T::node_type::Node;
+            using weight_type = typename T::weight;
+            using key_type = typename T::key_type;
+            using value_type = typename T::value_type;
+
+            node_type*      m_node;
+            node_iterator   m_iterator;
+            node_list       m_list;
+            subnode_type*   m_cur;
+
+        public:
+            FragmentedTreapMapIterator(const typename T::iterator& i) :
+                m_node(i.m_node),
+                m_iterator(i.m_iterator),
+                m_list(i.m_list),
+                m_cur(i.m_cur)
+            {
+            }
+
+            FragmentedTreapMapIterator(node_type* _node, node_iterator _it, node_list _list) :
+                m_node(_node),
+                m_iterator(_it),
+                m_list(_list),
+                m_cur(_node ? _node->first : nullptr)
+            {
+            }
+
+            FragmentedTreapMapIterator(node_type* _node, subnode_type* _cur, node_iterator _it, node_list _list) :
+                m_node(_node),
+                m_iterator(_it),
+                m_list(_list),
+                m_cur(_cur)
+            {
+            }
+
+            const node_iterator& iterator() const { return m_iterator; }
+
+            node_type* node() const { return m_node; }
+
+            subnode_type* cur() const { return m_cur; }
+
+            node_type* root() const
+            {
+                return m_iterator == m_list.end() ? nullptr
+                                                  : (*m_iterator)->root;
+            }
+
+            bool operator==(const FragmentedTreapMapIterator<T, value_ref>& _other) const
+            {
+                return m_node == _other.m_node
+                       && m_cur == _other.m_cur;
+            }
+
+            bool operator!=(const FragmentedTreapMapIterator<T, value_ref>& _other) const
+            {
+                return m_node != _other.m_node
+                       || m_cur != _other.m_cur;
+                // || m_iterator != _other.m_iterator;
+            }
+
+            typename T::const_key key() const { return m_node->key; }
+            value_ref value() const { return m_cur->value; }
+
+            /**
+             * @brief Weight of current element
+             */
+            weight_type weight() const { return m_cur ? m_cur->weight
+                                                      : AugmentedTreapSum::makeEmpty<weight_type>(); }
+
+            /**
+             * @brief Sum of all elements with current key
+             */
+            weight_type sumCurrent() const { return m_node ? m_node->sum - m_node->sumLeft() - m_node->sumRight()
+                                                           : AugmentedTreapSum::makeEmpty<weight_type>(); }
+
+            /**
+             * @brief Sum of all elements with current key
+             */
+            weight_type sum() const { return m_node ? m_node->sum : AugmentedTreapSum::makeEmpty<weight_type>(); }
+
+            value_ref& operator*()  { return m_cur->value; }
+
+            FragmentedTreapMapIterator& operator++() // prefix ++
+            {
+                //Check first if we can go forward in the same node
+                if (m_cur && m_cur->next)
+                {
+                    m_cur = m_cur->next;
+                }
+                else
+                {
+                    if (!m_node) //We're at the end
+                    {
+                        // ++ from end(). get the root of the tree
+                        m_iterator = m_list.begin();
+                        m_node = TreapUtil<key_type, value_type, node_type>::findFirstNode(root());
+
+                        // error! ++ requested for an empty tree
+                        if (!m_node)
+                            throw std::underflow_error("FragmentedTreapMapIteratorIterator operator++ (): tree empty");
+                    }
+                    else if (m_node->right)
+                    {
+                        // successor is the furthest left node of
+                        // right subtree
+                        m_node = TreapUtil<key_type, value_type, node_type>::findFirstNode(m_node->right);
+                    }
+                    else
+                    {
+                        // have already processed the left subtree, and
+                        // there is no right subtree. move up the tree,
+                        // looking for a parent for which m_node is a left child,
+                        // stopping if the parent becomes nullptr. a non-nullptr parent
+                        // is the successor. if parent is nullptr, the original node
+                        // was the last node inorder, and its successor
+                        // is the end of the list
+                        typename T::node_type* p = m_node->parent;
+
+                        while (p && m_node == p->right)
+                        {
+                            m_node = p;
+                            p = p->parent;
+                        }
+
+                        m_node = p;
+
+                        //Check again if node is null, in which case we should try and go to the next fraction
+                        if (!m_node)
+                        {
+                            ++m_iterator;
+                            m_node = TreapUtil<key_type, value_type, node_type>::findFirstNode(root());
+                        }
+                    }
+
+                    m_cur = m_node ? m_node->first : nullptr;
+                }
+
+                return *this;
+            }
+
+            FragmentedTreapMapIterator& operator--() // prefix --
+            {
+                //Check first if we can go backwards in the same node
+                if (m_cur && m_cur->previous)
+                {
+                    m_cur = m_cur->previous;
+                }
+                else
+                {
+                    if (!m_node) // -- from end()
+                    {
+                        --m_iterator;
+                        m_node = TreapUtil<key_type, value_type, node_type>::findLastNode(root());
+
+                        // error! -- requested for an empty tree
+                        if (!m_node)
+                            throw std::underflow_error("FragmentedTreapMapIteratorIterator operator-- (): tree empty");
+                    }
+                    else if (m_node->left)
+                    {
+                        // successor is the furthest right node of
+                        // right subtree
+                        m_node = TreapUtil<key_type, value_type, node_type>::findLastNode(m_node->left);
+                    }
+                    else
+                    {
+                        // have already processed the right subtree, and
+                        // there is no left subtree. move up the tree,
+                        // looking for a parent for which m_node is a right child,
+                        // stopping if the parent becomes nullptr. a non-nullptr parent
+                        // is the successor. if parent is nullptr, the original node
+                        // was the last node inorder, and its successor
+                        // is the end of the list
+                        typename T::node_type* p = m_node->parent;
+
+                        while (p && m_node == p->left)
+                        {
+                            m_node = p;
+                            p = p->parent;
+                        }
+
+                        m_node = p;
+
+                        //Check again if node is null, in which case we should try and go to the previous fraction
+                        if (!m_node)
+                        {
+                            --m_iterator;
+                            m_node = TreapUtil<key_type, value_type, node_type>::findLastNode(root());
+                        }
+                    }
+
+                    m_cur = m_node ? m_node->last : nullptr;
+                }
+
+                return *this;
+            }
+
+            FragmentedTreapMapIterator operator++ (int)  // postfix ++
+            {
+                FragmentedTreapMapIterator result(*this);
+                ++(*this);
+                return result;
+            }
+
+            FragmentedTreapMapIterator operator-- (int)  // postfix --
+            {
+                FragmentedTreapMapIterator result(*this);
+                --(*this);
+                return result;
+            }
+
+
+
+            //friend class FragmentedTreapMap<class T::key_type, class T::value_type, class T::ratio_type, class T::node_type>;
+    };
+
+    template<typename K, typename V, typename R, typename Node>
     class FragmentedTreapMap
     {
             const FragmentedTreapMap<K,V,R,Node>& constThis()
@@ -97,8 +326,8 @@ namespace KLib
             typedef K         key_type;
             typedef R         ratio_type;
 
-            typedef FragmentedTreapMapIterator<FragmentedTreapMap<K,V, R, Node>, reference> iterator;
-            typedef FragmentedTreapMapIterator<const FragmentedTreapMap<K,V, R, Node>, const_reference> const_iterator;
+            using iterator = FragmentedTreapMapIterator<FragmentedTreapMap<K,V, R, Node>, reference>;
+            using const_iterator = FragmentedTreapMapIterator<const FragmentedTreapMap<K,V, R, Node>, const_reference>;
 
 
             FragmentedTreapMap()
@@ -160,7 +389,7 @@ namespace KLib
             weight sumAfter(const_key _key) const;
             weight sum() const;
 
-            virtual weight sumBetween(const_key _from, const_key _to) const { return sumTo(_to) - sumBefore(_from); }
+            weight sumBetween(const_key _from, const_key _to) const { return sumTo(_to) - sumBefore(_from); }
 
             const_iterator  lowerBound(const_key _key) const;
             const_iterator  upperBound(const_key _key) const;
@@ -204,235 +433,16 @@ namespace KLib
 
     };
 
-    template<class K, class V, class R, class S>
+    template<typename K, typename V, typename R, typename S>
     class FragmentedTreapMap1 : public FragmentedTreapMap<K, V, R, AugmentedTreapNode<K,V,S> >
     {};
-
-    /* ####################################################################### */
-    /* Iterator */
-
-    template<typename T, typename value_ref>
-    class FragmentedTreapMapIterator
-    {
-        friend class T::const_iterator;
-
-            typedef const typename T::fnode_list&       node_list;
-            typedef typename T::const_fnode_iterator    node_iterator;
-            typedef typename T::node_type               node_type;
-            typedef typename T::node_type::Node         subnode_type;
-            typedef typename T::weight                  weight_type;
-            typedef typename T::key_type                key_type;
-            typedef typename T::value_type              value_type;
-
-            node_type*      m_node;
-            node_iterator   m_iterator;
-            node_list       m_list;
-            subnode_type*   m_cur;
-
-        public:
-            FragmentedTreapMapIterator(const typename T::iterator& i) :
-                m_node(i.m_node),
-                m_iterator(i.m_iterator),
-                m_list(i.m_list),
-                m_cur(i.m_cur)
-            {
-            }
-
-            FragmentedTreapMapIterator(node_type* _node, node_iterator _it, node_list _list) :
-                m_node(_node),
-                m_iterator(_it),
-                m_list(_list),
-                m_cur(_node ? _node->first : nullptr)
-            {
-            }
-
-            FragmentedTreapMapIterator(node_type* _node, subnode_type* _cur, node_iterator _it, node_list _list) :
-                m_node(_node),
-                m_iterator(_it),
-                m_list(_list),
-                m_cur(_cur)
-            {
-            }
-
-            node_type* root() const
-            {
-                return m_iterator == m_list.end() ? nullptr
-                                                   : (*m_iterator)->root;
-            }
-
-            bool operator==(const FragmentedTreapMapIterator<T, value_ref>& _other) const
-            {
-                return m_node == _other.m_node
-                       && m_cur == _other.m_cur;
-            }
-
-            bool operator!=(const FragmentedTreapMapIterator<T, value_ref>& _other) const
-            {
-                return m_node != _other.m_node
-                       || m_cur != _other.m_cur;
-                      // || m_iterator != _other.m_iterator;
-            }
-
-            typename T::const_key key() const { return m_node->key; }
-            value_ref value() const { return m_cur->value; }
-
-            /**
-             * @brief Weight of current element
-             */
-            weight_type weight() const { return m_cur ? m_cur->weight
-                                                             : AugmentedTreapSum::makeEmpty<weight_type>(); }
-
-            /**
-             * @brief Sum of all elements with current key
-             */
-            weight_type sumCurrent() const { return m_node ? m_node->sum - m_node->sumLeft() - m_node->sumRight()
-                                                                  : AugmentedTreapSum::makeEmpty<weight_type>(); }
-
-            /**
-             * @brief Sum of all elements with current key
-             */
-            weight_type sum() const { return m_node ? m_node->sum : AugmentedTreapSum::makeEmpty<weight_type>(); }
-
-            value_ref& operator*()  { return m_cur->value; }
-
-        FragmentedTreapMapIterator& operator++() // prefix ++
-        {
-            //Check first if we can go forward in the same node
-            if (m_cur && m_cur->next)
-            {
-                m_cur = m_cur->next;
-            }
-            else
-            {
-                if (!m_node) //We're at the end
-                {
-                    // ++ from end(). get the root of the tree
-                    m_iterator = m_list.begin();
-                    m_node = TreapUtil<key_type, value_type, node_type>::findFirstNode(root());
-
-                    // error! ++ requested for an empty tree
-                    if (!m_node)
-                        throw std::underflow_error("FragmentedTreapMapIteratorIterator operator++ (): tree empty");
-                }
-                else if (m_node->right)
-                {
-                    // successor is the furthest left node of
-                    // right subtree
-                    m_node = TreapUtil<key_type, value_type, node_type>::findFirstNode(m_node->right);
-                }
-                else
-                {
-                    // have already processed the left subtree, and
-                    // there is no right subtree. move up the tree,
-                    // looking for a parent for which m_node is a left child,
-                    // stopping if the parent becomes nullptr. a non-nullptr parent
-                    // is the successor. if parent is nullptr, the original node
-                    // was the last node inorder, and its successor
-                    // is the end of the list
-                    typename T::node_type* p = m_node->parent;
-
-                    while (p && m_node == p->right)
-                    {
-                        m_node = p;
-                        p = p->parent;
-                    }
-
-                    m_node = p;
-
-                    //Check again if node is null, in which case we should try and go to the next fraction
-                    if (!m_node)
-                    {
-                        ++m_iterator;
-                        m_node = TreapUtil<key_type, value_type, node_type>::findFirstNode(root());
-                    }
-                }
-
-                m_cur = m_node ? m_node->first : nullptr;
-            }
-
-            return *this;
-        }
-
-        FragmentedTreapMapIterator& operator--() // prefix --
-        {
-            //Check first if we can go backwards in the same node
-            if (m_cur && m_cur->previous)
-            {
-                m_cur = m_cur->previous;
-            }
-            else
-            {
-                if (!m_node) // -- from end()
-                {
-                    --m_iterator;
-                    m_node = TreapUtil<key_type, value_type, node_type>::findLastNode(root());
-
-                    // error! -- requested for an empty tree
-                    if (!m_node)
-                        throw std::underflow_error("FragmentedTreapMapIteratorIterator operator-- (): tree empty");
-                }
-                else if (m_node->left)
-                {
-                    // successor is the furthest right node of
-                    // right subtree
-                    m_node = TreapUtil<key_type, value_type, node_type>::findLastNode(m_node->left);
-                }
-                else
-                {
-                    // have already processed the right subtree, and
-                    // there is no left subtree. move up the tree,
-                    // looking for a parent for which m_node is a right child,
-                    // stopping if the parent becomes nullptr. a non-nullptr parent
-                    // is the successor. if parent is nullptr, the original node
-                    // was the last node inorder, and its successor
-                    // is the end of the list
-                    typename T::node_type* p = m_node->parent;
-
-                    while (p && m_node == p->left)
-                    {
-                        m_node = p;
-                        p = p->parent;
-                    }
-
-                    m_node = p;
-
-                    //Check again if node is null, in which case we should try and go to the previous fraction
-                    if (!m_node)
-                    {
-                        --m_iterator;
-                        m_node = TreapUtil<key_type, value_type, node_type>::findLastNode(root());
-                    }
-                }
-
-                m_cur = m_node ? m_node->last : nullptr;
-            }
-
-            return *this;
-        }
-
-        FragmentedTreapMapIterator operator++ (int)  // postfix ++
-        {
-           FragmentedTreapMapIterator result(*this);
-           ++(*this);
-           return result;
-        }
-
-        FragmentedTreapMapIterator operator-- (int)  // postfix --
-        {
-           FragmentedTreapMapIterator result(*this);
-           --(*this);
-           return result;
-        }
-
-        friend class FragmentedTreapMap<class T::key_type, class T::value_type, class T::ratio_type, class T::node_type>;
-    };
 
     //DESIGN CONCERNS
 
     //Iterator should be modified to be able to jump to other treaps in the structure, only becoming end() if no
     //more treap after/before. Subclass and make op++ op-- virtual?
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::fnode_iterator
     FragmentedTreapMap<K,V, R, Node>::iterForKey(const_key _key)
     {
@@ -449,7 +459,7 @@ namespace KLib
         return prev;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::const_fnode_iterator
     FragmentedTreapMap<K,V, R, Node>::iterForKey(const_key _key) const
     {
@@ -466,7 +476,7 @@ namespace KLib
         return prev;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     void FragmentedTreapMap<K,V, R, Node>::checkAndClean(Node* root)
     {
         if (!root) //A fraction will only be empty if the root is null.
@@ -488,7 +498,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     void FragmentedTreapMap<K,V, R, Node>::insert(const_key _key, const_reference _value, const_weight _weight)
     {
         //Construct the node
@@ -496,17 +506,17 @@ namespace KLib
         TreapUtil<K,V,Node>::doInsert(newNode, rootForKey(_key));
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::remove(iterator i)
     {
         if (i == end())
             return false;
 
-        TreapUtil<K,V,Node>::doRemove(i.m_node, i.m_root, i.m_cur);
+        TreapUtil<K,V,Node>::doRemove(i.node(), i.m_root, i.cur());
         return true;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::remove(const_key _key, const_reference _value)
     {
         //Try to find the node
@@ -526,7 +536,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::removeAll(const_key _key)
     {
         Node** root = rootForKey(_key);
@@ -540,7 +550,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::move(const_key _currentKey, const_reference _value, const_key _newKey)
     {
         Node* cur = TreapUtil<K,V,Node>::findEQ(_currentKey, *rootForKey(_currentKey));
@@ -564,7 +574,7 @@ namespace KLib
         return false;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::splitFragmentAt(const_key _key, const_ratio _val)
     {
         auto i = iterForKey(_key);
@@ -581,7 +591,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::setFragmentRatio(const_key _key, const_ratio _val)
     {
         for (auto i = m_nodes.begin(); i != m_nodes.end(); ++i)
@@ -596,7 +606,7 @@ namespace KLib
         return false;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::joinFragmentsAt(const_key _key)
     {
         auto prev = m_nodes.begin();
@@ -620,7 +630,7 @@ namespace KLib
         return false;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     bool FragmentedTreapMap<K,V, R, Node>::setWeight(const_key _key, const_reference _value, const_weight _weight)
     {
         Node* n = TreapUtil<K,V,Node>::findEQ(_key, *rootForKey(_key));
@@ -651,7 +661,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     void FragmentedTreapMap<K,V, R, Node>::clear()
     {
         //Remove all fractions except first
@@ -666,7 +676,7 @@ namespace KLib
         TreapUtil<K,V,Node>::doClear(&(m_nodes.front()->root));
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     int FragmentedTreapMap<K,V, R, Node>::count() const
     {
         int count = 0;
@@ -682,14 +692,14 @@ namespace KLib
         return count;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     int FragmentedTreapMap<K,V, R, Node>::isEmpty() const
     {
         return m_nodes.front() == m_nodes.back()
                 && !m_nodes.front()->root;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::weight
     FragmentedTreapMap<K,V, R, Node>::sumBefore(const_key _key) const
     {
@@ -710,17 +720,17 @@ namespace KLib
         return w;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::weight
     FragmentedTreapMap<K,V, R, Node>::sumBefore(const_iterator i) const
     {
         //If invalid, return sum
-        if (i.m_iterator == m_nodes.end()) return sum();
+        if (i.iterator() == m_nodes.end()) return sum();
 
         //Otherwise, add everything before, ending with the tree pointed by the iterator.
         weight w = AugmentedTreapSum::makeEmpty<weight>();
 
-        for (auto j = m_nodes.begin(); j != i.m_iterator && j != m_nodes.end(); ++j)
+        for (auto j = m_nodes.begin(); j != i.iterator() && j != m_nodes.end(); ++j)
         {
             if (!(*j)->root)
                 continue;
@@ -730,16 +740,16 @@ namespace KLib
         }
 
         //Now, add the left sum of the current tree
-        if (i.m_iterator == m_nodes.begin() || (*i.m_iterator)->start < i.m_node->key)
+        if (i.iterator() == m_nodes.begin() || (*i.iterator())->start < i.node()->key)
         {
-            w = FragmentedTreap::transform<R, weight>((*i.m_iterator)->ratio, w)
-              + TreapUtil<K,V,Node>::leftSum(i.m_node, i.m_cur, false, (*i.m_iterator)->root);
+            w = FragmentedTreap::transform<R, weight>((*i.iterator())->ratio, w)
+                + TreapUtil<K,V,Node>::leftSum(i.node(), i.cur(), false, (*i.iterator())->root);
         }
 
         return w;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::weight
     FragmentedTreapMap<K,V, R, Node>::sumTo(const_key _key) const
     {
@@ -760,7 +770,7 @@ namespace KLib
         return w;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::weight
     FragmentedTreapMap<K,V, R, Node>::sumFrom(const_key _key) const
     {
@@ -781,7 +791,7 @@ namespace KLib
         return w;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::weight
     FragmentedTreapMap<K,V, R, Node>::sumAfter(const_key _key) const
     {
@@ -802,7 +812,7 @@ namespace KLib
         return w;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::weight
     FragmentedTreapMap<K,V, R, Node>::sum() const
     {
@@ -820,7 +830,7 @@ namespace KLib
         return w;
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::const_iterator //First node with value >= w, nullptr if none.
     FragmentedTreapMap<K,V, R, Node>::lowerBound(const_key _key) const
     {
@@ -845,7 +855,7 @@ namespace KLib
         return const_iterator(n, i, m_nodes);
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::const_iterator //First node with value > w, nullptr if none.
     FragmentedTreapMap<K,V, R, Node>::upperBound(const_key _key) const
     {
@@ -870,7 +880,7 @@ namespace KLib
         return const_iterator(n, i, m_nodes);
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::const_iterator
     FragmentedTreapMap<K,V, R, Node>::find(const_key _key) const
     {
@@ -878,7 +888,7 @@ namespace KLib
         return const_iterator(TreapUtil<K,V,Node>::findEQ(_key, (*i)->root), i, m_nodes);
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::const_iterator
     FragmentedTreapMap<K,V, R, Node>::find(const_key _key, const_reference _val) const
     {
@@ -895,7 +905,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::const_iterator
     FragmentedTreapMap<K,V, R, Node>::begin() const
     {
@@ -907,11 +917,11 @@ namespace KLib
         return const_iterator(TreapUtil<K,V,Node>::findFirstNode((*i)->root), i, m_nodes);
     }
 
-    template<class K, class V, class R, class Node>
+    template<typename K, typename V, typename R, typename Node>
     typename FragmentedTreapMap<K,V, R, Node>::iterator
     FragmentedTreapMap<K,V, R, Node>::unconstIter(const_iterator ci) const
     {
-        return iterator(ci.m_node, ci.m_cur, ci.m_iterator, m_nodes);
+        return iterator(ci.node(), ci.cur(), ci.iterator(), m_nodes);
     }
 }
 

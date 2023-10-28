@@ -21,7 +21,7 @@
 #include "modelexception.h"
 #include "../controller/io.h"
 #include "security.h"
-#include "currency.h"
+//#include "currency.h"
 
 #include <QXmlStreamReader>
 
@@ -34,31 +34,29 @@ namespace KLib
 
     void ExchangePair::set(const QDate& _date, double _rate)
     {
-        m_rates.set(_date, _rate);
+        m_rates[_date] = _rate;
         emit rateSet(_date);
     }
 
     void ExchangePair::remove(const QDate& _date)
     {
-        m_rates.remove(_date);
+        m_rates.erase(_date);
         emit rateRemoved(_date);
     }
 
     double ExchangePair::on(const QDate& _date) const
     {
-        try
-        {
-            return m_rates.findLT(_date);
-        }
-        catch (std::underflow_error)
-        {
+        auto it = m_rates.lower_bound(_date);
+        if (it == m_rates.end()) {
             return 0;
         }
+
+        return it->second;
     }
 
     double ExchangePair::last() const
     {
-        return m_rates.empty() ? 0 : m_rates.last();
+        return m_rates.empty() ? 0 : m_rates.end()->second;
     }
 
     const QList<ExchangePair::Rate> ExchangePair::rates() const
@@ -67,7 +65,7 @@ namespace KLib
 
         for (auto i = m_rates.begin(); i != m_rates.end(); ++i)
         {
-            rat << QPair<QDate, double>(i.key(), i.value());
+            rat << QPair<QDate, double>(i->first, i->second);
         }
 
         return rat;
@@ -120,8 +118,8 @@ namespace KLib
                 {
                     attributes = _reader.attributes();
 
-                    m_rates.add(QDate::fromString(IO::getAttribute("date", attributes), Qt::ISODate),
-                                IO::getAttribute("value", attributes).toDouble());
+                    m_rates.insert({QDate::fromString(IO::getAttribute("date", attributes), Qt::ISODate),
+                                    IO::getAttribute("value", attributes).toDouble()});
                 }
 
                 _reader.readNext();
@@ -141,8 +139,8 @@ namespace KLib
         for (auto i = m_rates.begin(); i != m_rates.end(); ++i)
         {
             _writer.writeEmptyElement(StdTags::PRICE);
-            _writer.writeAttribute("date", i.key().toString(Qt::ISODate));
-            _writer.writeAttribute("value", QString::number(i.value()));
+            _writer.writeAttribute("date", i->first.toString(Qt::ISODate));
+            _writer.writeAttribute("value", QString::number(i->second));
         }
 
         _writer.writeEndElement();
@@ -268,7 +266,7 @@ namespace KLib
             emit rateSet(p, _date);
             emit modified();
 
-            if (_date == p->m_rates.lastKey())
+            if (_date == p->m_rates.end()->first)
             {
                 emit lastRateModified(p);
             }
@@ -284,7 +282,7 @@ namespace KLib
             emit rateRemoved(p, _date);
             emit modified();
 
-            if (_date > p->m_rates.lastKey())
+            if (_date > p->m_rates.end()->first)
             {
                 emit lastRateModified(p);
             }

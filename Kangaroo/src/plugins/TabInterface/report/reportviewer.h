@@ -21,7 +21,7 @@ class ReportViewer : public QWidget
         void reload();
 
     private:
-        QWebView* m_view;
+//        QWebView* m_view;
         QString m_html;
 
         Report* m_report;

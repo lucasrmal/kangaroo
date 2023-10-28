@@ -28,6 +28,7 @@
 #include <QFile>
 #include <QDir>
 #include <QUrl>
+#include <QDebug>
 #include <ctime>
 
 namespace KLib

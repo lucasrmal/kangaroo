@@ -21,7 +21,6 @@
 #define PICTUREMANAGER_H
 
 #include "../interfaces/ifilemanager.h"
-#include "../interfaces/scriptable.h"
 #include <QHash>
 #include <QPixmap>
 
@@ -29,7 +28,6 @@ namespace KLib
 {
     struct Picture
     {
-        K_SCRIPTABLE(Picture)
 
         public:
 
@@ -47,26 +45,11 @@ namespace KLib
         QPixmap thumbnail;
 
         void computeThumbnail();
-
-        static QScriptValue toScriptValue(QScriptEngine *engine, const Picture &p)
-        {
-          QScriptValue obj = engine->newObject();
-          obj.setProperty("id", p.id);
-          obj.setProperty("name", p.name);
-          return obj;
-        }
-
-        static void fromScriptValue(const QScriptValue &obj, Picture &p)
-        {
-          p.id = obj.property("id").toNumber();
-          p.name = obj.property("name").toString();
-        }
     };
 
     class PictureManager : public IFileManager
     {
         Q_OBJECT
-        K_SCRIPTABLE(PictureManager)
 
         Q_PROPERTY(int count READ count)
 

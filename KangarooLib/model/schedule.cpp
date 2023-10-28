@@ -67,11 +67,11 @@ int lastWeekday(const QDate& _date)
 
     if (temp.dayOfWeek() == Qt::Saturday)
     {
-        temp.addDays(-1);
+        temp = temp.addDays(-1);
     }
     else if (temp.dayOfWeek() == Qt::Sunday)
     {
-        temp.addDays(-2);
+        temp = temp.addDays(-2);
     }
 
     return temp.day();
@@ -83,11 +83,11 @@ int firstWeekday(const QDate& _date)
 
     if (temp.dayOfWeek() == Qt::Saturday)
     {
-        temp.addDays(2);
+        temp = temp.addDays(2);
     }
     else if (temp.dayOfWeek() == Qt::Sunday)
     {
-        temp.addDays(1);
+        temp = temp.addDays(1);
     }
 
     return temp.day();
@@ -173,7 +173,7 @@ QList<int> Recurrence::orderedDaysOfMonth(QSet<int> _days, const QDate& _dateInM
         _days.insert(_dateInMonth.daysInMonth());
     }
 
-    list = _days.toList();
+    list = _days.values();
     std::sort(list.begin(), list.end());
     return list;
 }

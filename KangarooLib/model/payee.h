@@ -23,8 +23,8 @@
 #include <QList>
 #include <QString>
 #include <QVector>
+#include <QHash>
 
-#include "../interfaces/scriptable.h"
 #include "stored.h"
 
 namespace KLib {
@@ -33,7 +33,6 @@ class Transaction;
 
 class Payee : public IStored {
   Q_OBJECT
-  K_SCRIPTABLE(Payee)
 
   Q_PROPERTY(QString name READ name WRITE setName)
   Q_PROPERTY(int idPicture READ idPicture WRITE setIdPicture)
@@ -93,7 +92,6 @@ class Payee : public IStored {
 
 class PayeeManager : public IStored {
   Q_OBJECT
-  K_SCRIPTABLE(PayeeManager)
 
   Q_PROPERTY(int count READ count)
 

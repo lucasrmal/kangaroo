@@ -31,17 +31,18 @@
 #define AUGMENTEDTREAPMAP_H
 
 #include "treaputil.h"
+#include <stdexcept>
 
 namespace KLib
 {
-    template<class T, class V> class AugmentedTreapMapIterator;
+    template<typename T, typename V> class AugmentedTreapMapIterator;
 
     /**
      * K: Key
      * V: Value
      * S: Sum
      */
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     class AugmentedTreapMap
     {
         public:
@@ -250,7 +251,7 @@ namespace KLib
             Node* m_root;
     };
 
-    template<class K, class V, class S>
+    template<typename K, typename V, typename S>
     class AugmentedTreapMap1 : public AugmentedTreapMap<K, V, AugmentedTreapNode<K,V,S> >
     {};
 
@@ -454,7 +455,7 @@ namespace KLib
         friend class AugmentedTreapMap<class T::key_type, class T::value_type, class T::node_type>;
     };
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     void AugmentedTreapMap<K,V, Node>::insert(const_key _key, const_reference _value, const_weight _weight)
     {
         //Construct the node
@@ -462,7 +463,7 @@ namespace KLib
         TreapUtil<K,V,Node>::doInsert(newNode, &m_root);
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool AugmentedTreapMap<K,V, Node>::remove(iterator i)
     {
         if (i == end())
@@ -472,7 +473,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool AugmentedTreapMap<K,V, Node>::remove(const_key _key, const_reference _value)
     {
         //Try to find the node
@@ -490,7 +491,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool AugmentedTreapMap<K, V, Node>::removeAll(const_key _key)
     {
         Node* n = TreapUtil<K,V,Node>::findEQ(_key, m_root);
@@ -502,7 +503,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool AugmentedTreapMap<K,V, Node>::move(const_key _currentKey, const_reference _value, const_key _newKey)
     {
         Node* cur = TreapUtil<K,V,Node>::findEQ(_currentKey, m_root);
@@ -526,7 +527,7 @@ namespace KLib
         return false;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool AugmentedTreapMap<K,V, Node>::setWeight(const_key _key, const_reference _value, const_weight _weight)
     {
         Node* n = TreapUtil<K,V,Node>::findEQ(_key, m_root);
@@ -557,7 +558,7 @@ namespace KLib
         return true;
     }
 
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     AugmentedTreapMap<K,V, Node>* AugmentedTreapMap<K,V, Node>::split(const_key _key)
     {
         AugmentedTreapMap<K,V, Node>* oth = new AugmentedTreapMap<K,V, Node>();
@@ -573,13 +574,13 @@ namespace KLib
      *
      * The other treap WILL BE CLEARED if this function is successfull.
      */
-    template<class K, class V, class Node>
+    template<typename K, typename V, typename Node>
     bool AugmentedTreapMap<K,V, Node>::merge(AugmentedTreapMap<K,V, Node>& _other)
     {
         return TreapUtil<K,V,Node>::doMerge(&m_root, &(_other.m_root));
     }
 
-    template<class K, class V, class Node> //First node with value >= w, nullptr if none.
+    template<typename K, typename V, typename Node> //First node with value >= w, nullptr if none.
     typename AugmentedTreapMap<K,V, Node>::iterator AugmentedTreapMap<K,V, Node>::find(const_key _key,
                                                                                        const_reference _val)
     {
@@ -595,7 +596,7 @@ namespace KLib
         }
     }
 
-    template<class K, class V, class Node> //First node with value >= w, nullptr if none.
+    template<typename K, typename V, typename Node> //First node with value >= w, nullptr if none.
     typename AugmentedTreapMap<K,V, Node>::const_iterator
     AugmentedTreapMap<K,V, Node>::find(const_key _key, const_reference _val) const
     {

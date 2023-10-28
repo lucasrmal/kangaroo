@@ -21,7 +21,6 @@
 #define DOCUMENTMANAGER_H
 
 #include "../interfaces/ifilemanager.h"
-#include "../interfaces/scriptable.h"
 
 #include <QDate>
 #include <QDateTime>
@@ -33,8 +32,6 @@ namespace KLib
 {
     struct Document
     {
-        K_SCRIPTABLE(Document)
-
         public:
 
         Document(int _id, const QDate& _date, const QByteArray& _contents, const QMimeType& _mime, const QString& _memo = QString()) :
@@ -53,33 +50,11 @@ namespace KLib
         QByteArray  contents;
         QMimeType   mime;
         QString     memo;
-
-        static QScriptValue toScriptValue(QScriptEngine *engine, const Document &d)
-        {
-          QScriptValue obj = engine->newObject();
-          obj.setProperty("id", d.id);
-          obj.setProperty("date", engine->newDate(QDateTime(d.date)));
-          //obj.setProperty("contents", QVariant(d.contents));
-          obj.setProperty("mime", d.mime.name());
-          obj.setProperty("memo", d.memo);
-          return obj;
-        }
-
-        static void fromScriptValue(const QScriptValue &obj, Document &d)
-        {
-          d.id = obj.property("id").toNumber();
-          d.date = obj.property("date").toDateTime().date();
-          //d.contents = obj.property("contents").toVariant().toByteArray();
-          d.mime = QMimeDatabase().mimeTypeForName(obj.property("mime").toString());
-          d.memo = obj.property("memo").toString();
-        }
     };
 
     class DocumentManager : public IFileManager
     {
         Q_OBJECT
-        K_SCRIPTABLE(PictureManager)
-
         Q_PROPERTY(int count READ count)
 
         DocumentManager();

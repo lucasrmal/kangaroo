@@ -26,6 +26,7 @@
 #include "../controller/io.h"
 #include <QXmlStreamReader>
 #include <QLinkedList>
+#include <QDebug>
 
 namespace KLib
 {

@@ -22,7 +22,7 @@
 
 #include "stored.h"
 #include "../amount.h"
-#include "../util/treapmap.h"
+//#include "../util/treapmap.h"
 #include "../interfaces/scriptable.h"
 
 #include <QHash>
@@ -61,7 +61,7 @@ namespace KLib
             Q_INVOKABLE double on(const QDate& _date) const;
             Q_INVOKABLE double last() const;
 
-            int count() const { return m_rates.count(); }
+            int count() const { return m_rates.size(); }
 
             bool isSecurity() const { return m_from.size() > 3; }
             QString to() const { return m_to; }
@@ -92,7 +92,7 @@ namespace KLib
 
             mutable Security* m_security;
 
-            TreapMap<QDate, double> m_rates;
+            std::map<QDate, double> m_rates;
 
             friend class PriceManager;
     };
