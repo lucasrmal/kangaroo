@@ -20,11 +20,11 @@
 #ifndef LEDGERWIDGET_H
 #define LEDGERWIDGET_H
 
-#include <functional>
-
 #include <QHeaderView>
 #include <QItemDelegate>
 #include <QTreeView>
+#include <functional>
+
 #include "../../amount.h"
 
 namespace KLib {
@@ -46,7 +46,8 @@ enum class BasicLedgerAction {
   NewSchedule,
   Edit,
   Delete,
-  Duplicate
+  Duplicate,
+  Reassign
 };
 
 struct LedgerAction {
@@ -184,6 +185,11 @@ class LedgerWidget : public QTreeView {
   void deleteSelected(DeleteScheduleAction _action);
 
   /**
+   * @brief Reassign the selected rows to a different account.
+   */
+  void reassignSelected(int new_account_id);
+
+  /**
    * @brief Duplicates the current row.
    *
    * Only works if a single row is selected.
@@ -261,6 +267,6 @@ class LedgerWidget : public QTreeView {
   LedgerWidgetDelegate* m_delegate;
   QMenu* m_transactionMenu;
 };
-}
+}  // namespace KLib
 
 #endif  // LEDGERWIDGET_H

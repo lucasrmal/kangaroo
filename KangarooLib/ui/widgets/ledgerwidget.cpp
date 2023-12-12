@@ -19,14 +19,6 @@
 
 #include "ledgerwidget.h"
 
-#include "../../controller/ledger/ledgercontroller.h"
-#include "../../controller/ledger/ledgercontrollermanager.h"
-#include "../../model/account.h"
-#include "../../model/ledger.h"
-#include "../../model/modelexception.h"
-#include "../core.h"
-#include "../dialogs/optionsdialog.h"
-
 #include <QAction>
 #include <QHeaderView>
 #include <QKeyEvent>
@@ -39,6 +31,14 @@
 #include <QTimer>
 #include <QtDebug>
 #include <stdexcept>
+
+#include "../../controller/ledger/ledgercontroller.h"
+#include "../../controller/ledger/ledgercontrollermanager.h"
+#include "../../model/account.h"
+#include "../../model/ledger.h"
+#include "../../model/modelexception.h"
+#include "../core.h"
+#include "../dialogs/optionsdialog.h"
 
 namespace KLib {
 
@@ -781,8 +781,23 @@ void LedgerWidget::createBasicActions() {
     }
   };
 
+  auto askForReassign = [this]() {
+    // No schedules may be reaassigned.
+    for (int row : selectedRows()) {
+      if (m_controller->rowIsSchedule(row)) {
+        QMessageBox::warning(this, tr("Reassign Transactions"),
+                             tr("Schedules may not be reassign. Un-select "
+                                "schedules before continuing."));
+        return;
+      }
+    }
+
+    int new_account_id = Constants::NO_ID;
+    reassignSelected(new_account_id);
+  };
+
   m_basicActions[BasicLedgerAction::NewTransaction] = new LedgerAction(
-      new QAction(Core::icon("new-row"), tr("&New Transaction"), this), true,
+      new QAction(Core::icon("new-row"), tr("New &Transaction"), this), true,
       [this](const QList<int>&) { return m_account->isOpen(); },
       [this, askToContinue]() {
         if (!m_controller->hasModifiedRow() || askToContinue()) editNew();
@@ -797,23 +812,22 @@ void LedgerWidget::createBasicActions() {
       });
 
   m_basicActions[BasicLedgerAction::NewSchedule] = new LedgerAction(
-      new QAction(Core::icon("new-schedule"), tr("Ne&w Schedule"), this), true,
+      new QAction(Core::icon("new-schedule"), tr("New &Schedule"), this), true,
       [this](const QList<int>&) { return m_account->isOpen(); },
       [this, askToContinue]() {
         if (!m_controller->hasModifiedRow() || askToContinue())
           editNewSchedule();
       });
 
-  m_basicActions[BasicLedgerAction::Edit] =
-      new LedgerAction(new QAction(Core::icon("edit"), tr("&Edit"), this), true,
-                       [this](const QList<int>& rows) {
-                         return m_account->isOpen() && rows.count() == 1 &&
-                                !rowIsLocked(rows.first());
-                       },
-                       [this, askToContinue]() {
-                         if (!m_controller->hasModifiedRow() || askToContinue())
-                           editCurrent();
-                       });
+  m_basicActions[BasicLedgerAction::Edit] = new LedgerAction(
+      new QAction(Core::icon("edit"), tr("&Edit"), this), true,
+      [this](const QList<int>& rows) {
+        return m_account->isOpen() && rows.count() == 1 &&
+               !rowIsLocked(rows.first());
+      },
+      [this, askToContinue]() {
+        if (!m_controller->hasModifiedRow() || askToContinue()) editCurrent();
+      });
 
   m_basicActions[BasicLedgerAction::Delete] = new LedgerAction(
       new QAction(Core::icon("trash"), tr("&Delete"), this), true,
@@ -823,6 +837,15 @@ void LedgerWidget::createBasicActions() {
                 (rows.count() == 1 && rows.first() != newTransactionRow()));
       },
       askForDelete);
+
+  m_basicActions[BasicLedgerAction::Reassign] = new LedgerAction(
+      new QAction(Core::icon("reassign"), tr("&Reassign"), this), true,
+      [this](const QList<int>& rows) {
+        return m_account->isOpen() &&
+               (rows.count() > 1 ||
+                (rows.count() == 1 && rows.first() != newTransactionRow()));
+      },
+      askForReassign);
 
   m_basicActions[BasicLedgerAction::Duplicate] = new LedgerAction(
       new QAction(Core::icon("copy"), tr("D&uplicate"), this), true,
@@ -1005,31 +1028,32 @@ void LedgerWidget::deleteSelected(DeleteScheduleAction _action) {
 
   // We need to get the transaction IDs BEFORE deleting anything, otherwise
   // the rows might not represent the same transactions again...
-  QLinkedList<int> transIds;
-  QLinkedList<QPair<int, QDate>> schIds;
-  QHash<int, QDate> schedules;
-
-  QStringList errors;
+  std::vector<int> selected_transactions;
+  std::vector<QPair<int, QDate>> selected_schedules_instances;
+  QHash<int, QDate> selected_schedules;
 
   for (int row : selectedRows()) {
     if (row == newTransactionRow()) {
       continue;
     } else if (m_controller->rowIsSchedule(row)) {
       auto item = m_controller->cacheItemAtRow(row);
-      schIds << QPair<int, QDate>(item.schedule->id(), item.date());
+      selected_schedules_instances.push_back(
+          QPair<int, QDate>(item.schedule->id(), item.date()));
 
-      if (!schedules.contains(item.schedule->id())) {
-        schedules.insert(item.schedule->id(), item.date());
-      } else if (schedules[item.schedule->id()] > item.date()) {
-        schedules[item.schedule->id()] = item.date();
+      if (!selected_schedules.contains(item.schedule->id())) {
+        selected_schedules.insert(item.schedule->id(), item.date());
+      } else if (selected_schedules[item.schedule->id()] > item.date()) {
+        selected_schedules[item.schedule->id()] = item.date();
       }
     } else {
-      transIds << m_controller->transactionAtRow(row)->id();
+      selected_transactions.push_back(
+          m_controller->transactionAtRow(row)->id());
     }
   }
 
   // Delete the transactions
-  for (int id : transIds) {
+  QStringList errors;
+  for (int id : selected_transactions) {
     try {
       LedgerManager::instance()->removeTransaction(id);
     } catch (ModelException e) {
@@ -1041,7 +1065,7 @@ void LedgerWidget::deleteSelected(DeleteScheduleAction _action) {
 
   switch (_action) {
     case DeleteScheduleAction::DeleteSchedule:
-      for (int id : schedules.keys()) {
+      for (int id : selected_schedules.keys()) {
         try {
           ScheduleManager::instance()->remove(id);
         } catch (ModelException e) {
@@ -1053,7 +1077,8 @@ void LedgerWidget::deleteSelected(DeleteScheduleAction _action) {
       break;
 
     case DeleteScheduleAction::SkipCurrentAndFutureInstances:
-      for (auto i = schedules.begin(); i != schedules.end(); ++i) {
+      for (auto i = selected_schedules.begin(); i != selected_schedules.end();
+           ++i) {
         try {
           Schedule* s = ScheduleManager::instance()->get(i.key());
           Recurrence r = s->recurrence();
@@ -1070,7 +1095,7 @@ void LedgerWidget::deleteSelected(DeleteScheduleAction _action) {
       break;
 
     case DeleteScheduleAction::SkipInstance:
-      for (const QPair<int, QDate>& pair : schIds) {
+      for (const QPair<int, QDate>& pair : selected_schedules_instances) {
         try {
           Schedule* s = ScheduleManager::instance()->get(pair.first);
           s->cancelOccurrenceOf(pair.second);
@@ -1087,8 +1112,32 @@ void LedgerWidget::deleteSelected(DeleteScheduleAction _action) {
     default:
       break;
   }
+  if (!errors.empty()) {
+    QMessageBox::warning(
+        this, tr("Delete Transactions"),
+        tr("The following errors occured:\n\n %1").arg(errors.join("\n")));
+  }
 
   selectionModel()->clearSelection();
+}
+
+void LedgerWidget::reassignSelected(int new_account_id) {
+  if (inEdit()) {
+    m_controller->discardChanges();
+  }
+
+  std::vector<int> selected_transactions;
+  for (int row : selectedRows()) {
+    if (row == newTransactionRow() || m_controller->rowIsSchedule(row)) {
+      QMessageBox::warning(this, tr("Reassign Transactions"),
+                           tr("Schedules may not be reassign. Un-select "
+                              "schedules before continuing."));
+      return;
+    } else {
+      selected_transactions.push_back(
+          m_controller->transactionAtRow(row)->id());
+    }
+  }
 }
 
 void LedgerWidget::duplicateCurrent() {
@@ -1106,4 +1155,4 @@ void LedgerWidget::enterSchedule() {
     m_controller->enterSchedule(currentIndex());
   }
 }
-}
+}  // namespace KLib
