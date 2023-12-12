@@ -277,6 +277,7 @@ namespace KLib
             virtual int col_debit() const = 0;      ///< Debit to this account
             virtual int col_credit() const = 0;     ///< Credit to this account
             virtual int col_balance() const = 0;    ///< Current balance
+            virtual int col_action() const = 0;     ///< Action
 
             virtual bool alignRight(int _column) const = 0;
             virtual bool alignCenter(int _column) const;

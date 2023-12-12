@@ -18,6 +18,8 @@ unsigned int qHash(ManageType _key, unsigned int seed = 0);
 
 class QAction;
 class QTreeView;
+class QVBoxLayout;
+class QSortFilterProxyModel;
 
 class BetterTableView : public QTableView
 {
@@ -50,7 +52,10 @@ class ManagerWidget : public QWidget
         void remove();
         void edit();
         void search();
+        void doneSearch();
         void merge();
+
+        void filterTo(const QString& _filter);
 
         void onSelectedRowsChanged(QList<int> _rows);
         void onSelectionChangeTreeView();
@@ -58,8 +63,13 @@ class ManagerWidget : public QWidget
     private:
         ManageType m_type;
 
+        QSortFilterProxyModel* m_sortFilterProxyModel;
+        QAbstractTableModel* m_tableModel;
+        QVBoxLayout* m_layout;
         BetterTableView* m_tableView;
         QTreeView*       m_treeView;
+
+        QWidget* m_findBar;
 
         QAction* m_actAdd;
         QAction* m_actEdit;

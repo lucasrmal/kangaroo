@@ -72,6 +72,7 @@ namespace KLib {
             int col_debit() const override       { return GenericLedgerColumn::DEBIT; }
             int col_credit() const override      { return GenericLedgerColumn::CREDIT; }
             int col_balance() const override     { return GenericLedgerColumn::BALANCE; }
+            int col_action() const override      { return -1; /* No action column. */ }
 
             QModelIndex     firstEditableIndex(const QModelIndex& _index) const override;
             QModelIndex     lastEditableIndex(const QModelIndex& _index) const override;

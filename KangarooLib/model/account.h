@@ -27,6 +27,7 @@
 #include "../amount.h"
 #include "../interfaces/scriptable.h"
 #include "properties.h"
+#include "security.h"
 #include "stored.h"
 
 namespace KLib {
@@ -197,7 +198,13 @@ class Account : public IStored {
 
   bool hasParent() const;
   int type() const { return m_type; }
-  QString name() const { return m_name; }
+  QString name() const {
+    if (m_idSecurity != Constants::NO_ID) {
+        return SecurityManager::instance()->get(m_idSecurity)->formattedName();
+    }
+
+    return m_name;
+  }
   QString mainCurrency() const { return m_mainCurrency; }
   QString code() const { return m_code; }
   QString note() const { return m_note; }

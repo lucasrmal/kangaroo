@@ -151,13 +151,9 @@ LedgerWidget::LedgerWidget(Account* _account, QWidget* parent)
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-  // setAlternatingRowColors(true);
-  // setStyleSheet("QTreeView {alternate-background-color:
-  // #E1F0F3;background-color: #F5FBFF; }");
   setStyleSheet(
       "QTreeView {alternate-background-color: #F1F8FF;background-color: "
       "#F6FCFF; } ");
-  //"QTreeView::item { border: 1px solid #d9d9d9; }");
 
   setIndentation(0);
   expandAll();

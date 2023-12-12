@@ -999,6 +999,61 @@ void InvestmentTransaction::emitSplitSignals(const QList<Split>& _old, const QLi
   }
 }
 
+QString InvestmentTransaction::autoMemo() const {
+  // Provide an "auto-memo" if none is provided.
+  if (!m_memo.isEmpty()) {
+    return m_memo;
+  }
+
+  QString memo;
+
+  switch (m_action) {
+  case InvestmentAction::Buy:
+    memo = tr("Bought %1 shares at %2 per share. Total cost: %3").arg(shareCount().toString()).arg(pricePerShare().toString()).arg(splitFor(InvestmentSplitType::CostProceeds).invertedFormattedAmount());
+    break;
+  case InvestmentAction::Sell:
+    memo = tr("Sold %1 shares at %2 per share. Total proceeds: %3").arg((-1 * shareCount()).toString()).arg(pricePerShare().toString()).arg(splitFor(InvestmentSplitType::CostProceeds).formattedAmount());
+    break;
+  case InvestmentAction::Dividend:
+  case InvestmentAction::Distribution:
+    memo = tr("%1: %2").arg(actionToString(m_action)).arg(splitFor(InvestmentSplitType::DistributionSource).invertedFormattedAmount());
+    break;
+  case InvestmentAction::ReinvestDiv:
+  case InvestmentAction::ReinvestDistrib:
+    memo = tr("Reinvested %1: %2 shares at %3 per share.").arg(splitFor(InvestmentSplitType::DistributionSource).invertedFormattedAmount()).arg(shareCount().toString()).arg(pricePerShare().toString());
+    break;
+  case InvestmentAction::Fee:
+    memo = tr("Fee: %1").arg(actionToString(m_action)).arg(splitFor(InvestmentSplitType::Fee).formattedAmount());
+    break;
+  default:
+    break;
+  }
+
+  if (!memo.isEmpty()) {
+    memo = QString("[%1] %2").arg(SecurityManager::instance()->get(Account::getTopLevel()->account(idInvestmentAccount())->idSecurity())->symbol()).arg(memo);
+  }
+
+  return memo;
+}
+
+QString InvestmentTransaction::transactionColor() const {
+  switch (m_action) {
+  case InvestmentAction::Buy:
+    return "#e5fae1";
+  case InvestmentAction::Sell:
+    return "#fae1e1";
+  case InvestmentAction::Dividend:
+  case InvestmentAction::ReinvestDiv:
+  case InvestmentAction::Distribution:
+  case InvestmentAction::ReinvestDistrib:
+    return "#f8fae1";
+  case InvestmentAction::Fee:
+    return "#f5f5f5";
+  default:
+    return "";
+  }
+}
+
 void InvestmentTransaction::load(QXmlStreamReader& _reader)
 {
   QXmlStreamAttributes attributes = _reader.attributes();

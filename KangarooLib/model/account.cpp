@@ -28,7 +28,6 @@
 #include "pricemanager.h"
 #include "schedule.h"
 #include "security.h"
-#include "transactionmanager.h"
 
 #include <QStack>
 #include <QXmlStreamReader>

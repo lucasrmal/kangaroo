@@ -50,6 +50,14 @@ namespace KLib
         }
     }
 
+    QString Transaction::Split::formattedAmount() const {
+        return Account::getTopLevel()->account(idAccount)->formatAmount(amount);
+    }
+
+    QString Transaction::Split::invertedFormattedAmount() const {
+        return Account::getTopLevel()->account(idAccount)->formatAmount(amount * -1);
+    }
+
     Transaction::Transaction() :
         m_clearedStatus(ClearedStatus::None),
         m_flagged(false),

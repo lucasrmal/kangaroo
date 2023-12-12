@@ -529,7 +529,7 @@ QVariant LedgerController::cacheData(int _column, int _cacheRow, int _row,
         Account::getTopLevel()->getPath(idAccount, accountHeightDisplayed());
 
     Account* a = Account::getTopLevel()->account(idAccount);
-    if (a && a->allCurrencies().count() > 1) {
+    if (account()->allCurrencies().count() > 1 && a && a->allCurrencies().count() > 1) {
       return QString("%1 (%2)").arg(path).arg(currency);
     } else {
       return path;
@@ -570,7 +570,11 @@ QVariant LedgerController::cacheData(int _column, int _cacheRow, int _row,
 
       return d.toString(m_dateFormat);
     } else if (_column == col_memo()) {
-      return tr->memo();
+      if (_editRole) {
+        return tr->memo();
+      } else {
+        return tr->autoMemo();
+      }
     } else if (_column == col_payee()) {
       return tr->idPayee() == Constants::NO_ID
                  ? QVariant()
@@ -735,6 +739,16 @@ QVariant LedgerController::data(const QModelIndex& _index, int _role) const {
           }
         }
         break;
+      case Qt::BackgroundRole: {
+        if (mainRow == newTransactionRow() || _index.column() != col_action()) {
+            return QVariant();
+        }
+        QString customColor = m_cache[mainRow].transaction()->transactionColor();
+        if (!customColor.isEmpty()) {
+            return QColor(customColor);
+        }
+        break;
+      }
       case Qt::FontRole:
         if (mainRow == m_buffer->row) {
           QFont f = m_defaultFont;
@@ -1104,8 +1118,8 @@ QVariant LedgerBuffer::data(int _column, int _row, bool _editRole,
         idAccount, _controller->accountHeightDisplayed());
 
     Account* a = Account::getTopLevel()->account(idAccount);
-    if (a && a->allCurrencies().count() > 1) {
-      return QString("%1 (%2)").arg(path).arg(currency);
+    if (_controller->account()->allCurrencies().count() > 1 && a && a->allCurrencies().count() > 1) {
+      return QString("%1 (%2)").arg(path, currency);
     } else {
       return path;
     }
@@ -1845,8 +1859,10 @@ QWidget* LedgerWidgetDelegate::createEditor(QWidget* _parent,
   } else if (_index.column() == m_controller->col_transfer()) {
     const Account* a =
         static_cast<const LedgerController*>(_index.model())->account();
+
+    int displayFlags = a->allCurrencies().count() > 1 ? Flag_MultipleCurrencies : Flag_None;
     setCurrentEditor(new AccountSelector(
-        Flag_MultipleCurrencies,
+        displayFlags,
         AccountTypeFlags::Flag_All & ~AccountTypeFlags::Flag_Investment,
         a->id(), _parent));
   } else if (_index.column() == m_controller->col_debit() ||

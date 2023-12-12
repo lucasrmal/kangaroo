@@ -150,6 +150,7 @@ namespace KLib
             int col_debit() const override       { return -1; /* No debit column */ }
             int col_credit() const override      { return -1; /* No credit column */ }
             int col_balance() const override     { return InvestmentLedgerColumn::BALANCE; }
+            int col_action() const override     { return InvestmentLedgerColumn::ACTION; }
 
             QModelIndex     firstEditableIndex(const QModelIndex& _index) const override;
             QModelIndex     lastEditableIndex(const QModelIndex& _index) const override;

@@ -28,8 +28,9 @@
 #include <QToolBar>
 #include <QAction>
 #include <QSet>
-#include <QTreeView>
 #include <QSortFilterProxyModel>
+#include <QTreeView>
+#include <QToolButton>
 
 using namespace KLib;
 
@@ -61,7 +62,10 @@ void BetterTableView::selectionChanged(const QItemSelection& _selected, const QI
 
 ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
     QWidget(_parent),
-    m_type(_type)
+    m_type(_type),
+    m_sortFilterProxyModel(nullptr),
+    m_tableModel(nullptr),
+    m_findBar(nullptr)
 {
     QLabel* lblPicture = new QLabel(this);
     QLabel* lblTitle = new QLabel(this);
@@ -78,27 +82,27 @@ ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
 
     lblPicture->setFixedSize(48,48);
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    m_layout = new QVBoxLayout(this);
     QHBoxLayout* layoutTop = new QHBoxLayout();
 
-    mainLayout->setContentsMargins(0,0,0,0);
+    m_layout->setContentsMargins(0,0,0,0);
     layoutTop->setContentsMargins(6,6,6,0);
 
     layoutTop->addWidget(lblPicture);
     layoutTop->addWidget(lblTitle);
 
-    mainLayout->addLayout(layoutTop);
+    m_layout->addLayout(layoutTop);
 
     if (m_type != ManageType::Prices)
     {
-        mainLayout->addWidget(m_tableView);
+        m_layout->addWidget(m_tableView);
     }
     else
     {
-        mainLayout->addWidget(m_treeView);
+        m_layout->addWidget(m_treeView);
     }
 
-    mainLayout->addWidget(bottomToolbar);
+    m_layout->addWidget(bottomToolbar);
 
     QFont f;
     f.setPointSize(14);
@@ -130,22 +134,22 @@ ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
         m_actMerge = nullptr;
     }
 
-    m_actDelete = bottomToolbar->addAction(Core::icon("trash"),  tr("Delete"), this, SLOT(remove()));
+    m_actDelete = bottomToolbar->addAction(Core::icon("trash"), tr("Delete"), this, SLOT(remove()));
     bottomToolbar->addWidget(sep1);
-    m_actFind = bottomToolbar->addAction(Core::icon("find"),   tr("Search"), this, SLOT(search()));
+    m_actFind = bottomToolbar->addAction(Core::icon("find"), tr("Search"), this, SLOT(search()));
+    m_actFind->setShortcut(QKeySequence::Find);
 
     //Deactivate edit and remove by default since no rows selected...
     m_actDelete->setEnabled(false);
 
     int largeCol = 0;
-    QSortFilterProxyModel* proxyModel;
 
     if (m_type != ManageType::Prices)
     {
-        proxyModel = new QSortFilterProxyModel(this);
+        m_sortFilterProxyModel = new QSortFilterProxyModel(this);
 
-        proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-        m_tableView->setModel(proxyModel);
+        m_sortFilterProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+        m_tableView->setModel(m_sortFilterProxyModel);
         m_tableView->setSortingEnabled(true);
         m_tableView->horizontalHeader()->setSortIndicator(0, Qt::AscendingOrder);
 
@@ -162,7 +166,8 @@ ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
     case ManageType::Currencies:
         lblPicture->setPixmap(Core::pixmap("currency"));
         lblTitle->setText(tr("Currencies"));
-        proxyModel->setSourceModel(new CurrencyController(this));
+        m_tableModel = new CurrencyController(this);
+        m_sortFilterProxyModel->setSourceModel(m_tableModel);
         largeCol = CurrencyColumn::NAME;
         m_tableView->setColumnWidth(CurrencyColumn::CODE, 70);
         m_tableView->setColumnWidth(CurrencyColumn::SYMBOL, 70);
@@ -171,7 +176,8 @@ ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
     case ManageType::Institutions:
         lblPicture->setPixmap(Core::pixmap("institution"));
         lblTitle->setText(tr("Institutions"));
-        proxyModel->setSourceModel(new InstitutionController(InstitutionController::NoEmpty, this));
+        m_tableModel = new InstitutionController(InstitutionController::NoEmpty, this);
+        m_sortFilterProxyModel->setSourceModel(m_tableModel);
         largeCol = InstitutionColumn::NAME;
 
         m_tableView->setColumnWidth(InstitutionColumn::COUNTRY, 100);
@@ -187,7 +193,8 @@ ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
     case ManageType::Payees:
         lblPicture->setPixmap(Core::pixmap("payee"));
         lblTitle->setText(tr("Payees"));
-        proxyModel->setSourceModel(new PayeeController(this));
+        m_tableModel = new PayeeController(this);
+        m_sortFilterProxyModel->setSourceModel(m_tableModel);
         largeCol = PayeeColumn::NAME;
 
         m_tableView->setColumnWidth(PayeeColumn::ADDRESS, 230);
@@ -202,14 +209,16 @@ ManagerWidget::ManagerWidget(ManageType _type, QWidget* _parent) :
     case ManageType::Securities:
         lblPicture->setPixmap(Core::pixmap("security"));
         lblTitle->setText(tr("Securities"));
-        proxyModel->setSourceModel(new SecurityController(this));
+        m_tableModel = new SecurityController(this);
+        m_sortFilterProxyModel->setSourceModel(m_tableModel);
         largeCol = SecurityColumn::NAME;
         break;
 
     case ManageType::Indexes:
         lblPicture->setPixmap(Core::pixmap("index"));
         lblTitle->setText(tr("Indexes"));
-        proxyModel->setSourceModel(new IndexController(this));
+        m_tableModel = new IndexController(this);
+        m_sortFilterProxyModel->setSourceModel(m_tableModel);
         largeCol = IndexColumn::NAME;
         break;
 
@@ -603,9 +612,59 @@ void ManagerWidget::edit()
     }
 }
 
+void ManagerWidget::filterTo(const QString& _filter)
+{
+    if (!m_sortFilterProxyModel) {
+        return;
+    }
+
+  m_sortFilterProxyModel->setFilterFixedString(_filter);
+    m_tableView->scrollTo(m_tableModel->)
+
+//    m_accountTree->expandAll();
+//    onCurrentAccountChanged(m_accountTree->currentAccount());
+//    m_accountTree->scrollTo(m_accountTree->currentIndex());
+}
+
 void ManagerWidget::search()
 {
+    if (m_findBar) {
+        return;
+    }
+    m_findBar = new QWidget(this);
 
+    QHBoxLayout* layout = new QHBoxLayout(m_findBar);
+    layout->setContentsMargins(0,0,0,0);
+
+    QLineEdit* txtSearch = new QLineEdit(m_findBar);
+    QToolButton* btnClose = new QToolButton(m_findBar);
+
+    btnClose->setAutoRaise(true);
+
+    QAction* actClose = new QAction(Core::icon("close"), "", this);
+    actClose->setShortcut(QKeySequence("Esc"));
+    btnClose->setDefaultAction(actClose);
+
+    layout->addWidget(btnClose);
+    layout->addWidget(txtSearch);
+
+    txtSearch->setFocus();
+
+    connect(actClose, &QAction::triggered, this, &ManagerWidget::doneSearch);
+    connect(txtSearch, &QLineEdit::textEdited, this, &ManagerWidget::search);
+
+    m_layout->insertWidget(m_layout->count()-1, m_findBar);
+}
+
+void ManagerWidget::doneSearch()
+{
+    if (!m_findBar) {
+        return;
+    }
+    m_layout->removeWidget(m_findBar);
+    m_findBar->deleteLater();
+    m_findBar = nullptr;
+    filterTo("");
 }
 
 void ManagerWidget::merge()

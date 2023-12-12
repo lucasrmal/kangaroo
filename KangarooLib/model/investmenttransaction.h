@@ -189,6 +189,8 @@ class InvestmentTransaction : public Transaction
 
     void setDate(const QDate& _date) override;
 
+    QString autoMemo() const override;
+
 
     /**
              * For each split type in the transaction, returns its index in the split list.
@@ -366,6 +368,8 @@ class InvestmentTransaction : public Transaction
     static QString distribTypeToString(DistribType _type);
 
     static Amount balanceAfterSplit(const Amount& _balanceBefore, const SplitFraction& _fraction);
+
+    QString transactionColor() const override;
 
   signals:
     void stockSplitAmountChanged();

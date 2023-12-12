@@ -208,7 +208,7 @@ QString ManageOthersPlugin::name() const
 
 QString ManageOthersPlugin::version() const
 {
-  return "1.0";
+  return "1.2";
 }
 
 QString ManageOthersPlugin::description() const

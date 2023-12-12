@@ -89,6 +89,9 @@ namespace KLib
             QString memo;
             QString userData;
 
+            QString formattedAmount() const;
+            QString invertedFormattedAmount() const;
+
             static QScriptValue toScriptValue(QScriptEngine *engine, const Split &s)
             {
               QScriptValue obj = engine->newObject();
@@ -161,6 +164,8 @@ namespace KLib
          * @return List of ID of the documents attached to this transaction.
          */
         QSet<int> attachments() const { return m_attachments; }
+
+        virtual QString autoMemo() const { return m_memo; }
 
         /**
          * @brief Sets the check number
@@ -240,6 +245,11 @@ namespace KLib
           Thus, the transaction has exactly 4 splits, 2 of them being with trading accounts.
         */
         Q_INVOKABLE virtual bool isCurrencyExchange() const { return m_isCurrencyExchange; }
+
+        /**
+         * @return A custom color to use for the transaction, or empty string to use the defaults.
+         */
+        virtual QString transactionColor() const { return ""; }
 
         static bool splitsBalance(const QList<KLib::Transaction::Split>& _splits);
 

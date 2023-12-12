@@ -46,6 +46,13 @@ namespace KLib
     {
     }
 
+    QString Security::formattedName() const {
+        if (m_symbol.isEmpty()) {
+            return name();
+        }
+        return m_name + " [" + m_symbol + "]";
+    }
+
     void Security::setType(SecurityType _type)
     {
         if (m_type == _type)

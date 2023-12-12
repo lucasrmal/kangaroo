@@ -980,7 +980,6 @@ QVariant InvestmentLedgerBuffer::data(int _column, int _row, bool _editRole, con
     {
       return QString("%1:").arg(InvestmentLedgerController::labelForRow(_row, action));
     }
-
   case InvestmentLedgerColumn::TRANSFER:
   {
     auto formatIdAccount = [_editRole, _controller] (int idAccount, const QString& currency) {

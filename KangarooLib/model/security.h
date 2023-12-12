@@ -128,6 +128,7 @@ namespace KLib
             int          idProvider() const  { return m_idProvider; }
             QString      note() const        { return m_note; }
             bool         defaultToSecurityPicture() const { return m_defaultToPicture; }
+            QString      formattedName() const;
 
             Amount       securityInfo(SecurityInfo _info);
 

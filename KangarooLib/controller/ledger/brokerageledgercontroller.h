@@ -81,6 +81,7 @@ namespace KLib
             int col_debit() const override       { return -1; }
             int col_credit() const override      { return -1; }
             int col_balance() const override     { return BrokerageLedgerColumn::CASH_BALANCE; }
+            int col_action() const override      { return -1; /* No action column. */ }
 
             bool alignRight(int _column) const override { return _column >= BrokerageLedgerColumn::QUANTITY; }
 
