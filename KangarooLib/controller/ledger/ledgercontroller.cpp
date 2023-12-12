@@ -18,8 +18,22 @@
  */
 
 #include "ledgercontroller.h"
+
+#include <QComboBox>
+#include <QCompleter>
+#include <QDateEdit>
+#include <QDebug>
+#include <QHeaderView>
+#include <QLinkedList>
+#include <QMessageBox>
+#include <QPainter>
+#include <QStatusBar>
+#include <QTableView>
+#include <QTextEdit>
+
 #include "../../model/account.h"
 #include "../../model/currency.h"
+#include "../../model/investmenttransaction.h"
 #include "../../model/ledger.h"
 #include "../../model/modelexception.h"
 #include "../../model/payee.h"
@@ -37,22 +51,11 @@
 #include "../../ui/widgets/ledgerwidget.h"
 #include "../payeecontroller.h"
 
-#include <QComboBox>
-#include <QCompleter>
-#include <QDateEdit>
-#include <QDebug>
-#include <QHeaderView>
-#include <QLinkedList>
-#include <QMessageBox>
-#include <QPainter>
-#include <QStatusBar>
-#include <QTableView>
-#include <QTextEdit>
-
 namespace KLib {
 const int LedgerBuffer::NO_ROW = -1;
 const QString LedgerController::SPLIT_TEXT = QObject::tr("<< Split >>");
 QDate LedgerWidgetDelegate::m_lastUsedDate = QDate::currentDate();
+const QColor BORDER_COLOR = QColor(0xE8, 0xE8, 0xE8);
 
 LedgerController::LedgerController(Ledger* _ledger, LedgerBuffer* _buffer,
                                    QObject* _parent)
@@ -503,10 +506,13 @@ QList<Transaction::Split> LedgerController::displayedSplits(
   // Place the relevant split first.
   int i = 0;
 
+  bool hideTradingSplits = _tr->isCurrencyExchange() ||
+                           (qobject_cast<const InvestmentTransaction*>(_tr));
+
   while (i < splits.count()) {
     if (splits[i].idAccount == m_ledger->idAccount()) {
       splits.swap(i, 0);
-    } else if (_tr->isCurrencyExchange() &&
+    } else if (hideTradingSplits &&
                Account::accountIsCurrencyTrading(splits[i].idAccount)) {
       splits.removeAt(i);
       continue;
@@ -529,7 +535,8 @@ QVariant LedgerController::cacheData(int _column, int _cacheRow, int _row,
         Account::getTopLevel()->getPath(idAccount, accountHeightDisplayed());
 
     Account* a = Account::getTopLevel()->account(idAccount);
-    if (account()->allCurrencies().count() > 1 && a && a->allCurrencies().count() > 1) {
+    if (account()->allCurrencies().count() > 1 && a &&
+        a->allCurrencies().count() > 1) {
       return QString("%1 (%2)").arg(path).arg(currency);
     } else {
       return path;
@@ -605,7 +612,7 @@ QVariant LedgerController::cacheData(int _column, int _cacheRow, int _row,
                  ? formatCurrency(-splits[0].amount, splits[0].currency)
                  : QVariant();
     }
-  } else if (isSplit && _row < tr->splitCount()) {
+  } else if (isSplit && splits.count() != 1 && _row < tr->splitCount()) {
     if (_column == col_transfer()) {
       if (!_editRole) {
         return accountDisplay(splits[_row].idAccount, splits[_row].currency);
@@ -739,16 +746,6 @@ QVariant LedgerController::data(const QModelIndex& _index, int _role) const {
           }
         }
         break;
-      case Qt::BackgroundRole: {
-        if (mainRow == newTransactionRow() || _index.column() != col_action()) {
-            return QVariant();
-        }
-        QString customColor = m_cache[mainRow].transaction()->transactionColor();
-        if (!customColor.isEmpty()) {
-            return QColor(customColor);
-        }
-        break;
-      }
       case Qt::FontRole:
         if (mainRow == m_buffer->row) {
           QFont f = m_defaultFont;
@@ -757,6 +754,12 @@ QVariant LedgerController::data(const QModelIndex& _index, int _role) const {
         } else if (mainRow != newTransactionRow() &&
                    m_cache[mainRow].schedule &&
                    m_cache[mainRow].dueDate < QDate::currentDate()) {
+          QFont f = m_defaultFont;
+          f.setBold(true);
+          return f;
+        } else if (_index.column() == col_balance() &&
+                   mainRow != newTransactionRow() &&
+                   m_cache[mainRow].transaction()->isBannerTransaction()) {
           QFont f = m_defaultFont;
           f.setBold(true);
           return f;
@@ -1036,9 +1039,8 @@ bool LedgerBuffer::setData(int _column, int _row, const QVariant& _value,
     } else if (_column == _controller->col_debit()) {
       Amount a = Amount::fromUserLocale(_value.toString());
 
-      if (a == 0 &&
-          splits[_row].amount <
-              0)  // Check if there was data in the Credit column
+      if (a == 0 && splits[_row].amount <
+                        0)  // Check if there was data in the Credit column
       {
         return false;
       }
@@ -1047,9 +1049,8 @@ bool LedgerBuffer::setData(int _column, int _row, const QVariant& _value,
     } else if (_column == _controller->col_credit()) {
       Amount a = Amount::fromUserLocale(_value.toString());
 
-      if (a == 0 &&
-          splits[_row].amount >
-              0)  // Check if there was data in the Debit column
+      if (a == 0 && splits[_row].amount >
+                        0)  // Check if there was data in the Debit column
       {
         return false;
       }
@@ -1118,7 +1119,8 @@ QVariant LedgerBuffer::data(int _column, int _row, bool _editRole,
         idAccount, _controller->accountHeightDisplayed());
 
     Account* a = Account::getTopLevel()->account(idAccount);
-    if (_controller->account()->allCurrencies().count() > 1 && a && a->allCurrencies().count() > 1) {
+    if (_controller->account()->allCurrencies().count() > 1 && a &&
+        a->allCurrencies().count() > 1) {
       return QString("%1 (%2)").arg(path, currency);
     } else {
       return path;
@@ -1230,10 +1232,12 @@ void LedgerBuffer::loadSplits(const QList<Transaction::Split>& _splits,
     credit = cur.amount < 0 ? -cur.amount : 0;
     idTransfer = oth.idAccount;
     transferCurrency = oth.currency;
-
   };
 
-  if (_splits.count() == 2) {
+  if (_splits.count() == 1) {  // Banner transaction
+    debit = credit = 0;
+    idTransfer = Constants::NO_ID;
+  } else if (_splits.count() == 2) {
     if (_splits.first().idAccount == _controller->account()->id()) {
       loadFromSplit(_splits[0], _splits[1]);
     } else {
@@ -1332,14 +1336,13 @@ QStringList LedgerBuffer::validate(int& _firstErrorColumn,
       if (_firstErrorColumn == -1)
         _firstErrorColumn = _controller->col_transfer();
     }
-  } else if (idTransfer ==
-             Constants::NO_ID)  // Check if a transfer account is set
-  {
-    errors << tr("The transfer account is invalid.");
-    if (_firstErrorColumn == -1)
-      _firstErrorColumn = _controller->col_transfer();
-  } else  // Check if the transfer account exists
-  {
+  } else if (idTransfer == Constants::NO_ID) {  // Check that no balance is set
+                                                // for banner transactions.
+    if (debit - credit != 0) {
+      errors << tr("Banner transactions may not have an amount set.");
+      if (_firstErrorColumn == -1) _firstErrorColumn = _controller->col_debit();
+    }
+  } else {  // Check if the transfer account exists
     Account* a = Account::getTopLevel()->account(idTransfer);
 
     if (!a) {
@@ -1351,11 +1354,17 @@ QStringList LedgerBuffer::validate(int& _firstErrorColumn,
       if (_firstErrorColumn == -1)
         _firstErrorColumn = _controller->col_transfer();
     }
-  }
 
-  if (debit - credit == 0 && splits.isEmpty()) {
-    errors << tr("The transaction amount is zero.");
-    if (_firstErrorColumn == -1) _firstErrorColumn = _controller->col_debit();
+    if (debit - credit == 0) {
+      errors << tr("The transaction amount is zero.");
+      if (_firstErrorColumn == -1) _firstErrorColumn = _controller->col_debit();
+    }
+
+    if (idTransfer == _controller->account()->id()) {
+      errors << tr("Destination and source accounts may not be the same.");
+      if (_firstErrorColumn == -1)
+        _firstErrorColumn = _controller->col_transfer();
+    }
   }
 
   return errors;
@@ -1405,17 +1414,14 @@ QList<Transaction::Split> LedgerBuffer::splitsForSaving(
                                        from);
       tmp_splits << Transaction::Split(-frm.exchangedAmount(), idTransfer, to);
       Transaction::addTradingSplits(tmp_splits);
-
-      //                tmp_splits << Transaction::Split(-total,
-      //                CurrencyManager::instance()->get(from)->tradingAccount()->id());
-      //                tmp_splits << Transaction::Split(frm.exchangedAmount(),
-      //                CurrencyManager::instance()->get(to)->tradingAccount()->id());
-
-    } else  // No exchange, a plain 2 account transfer
-    {
+    } else if (idTransfer !=
+               Constants::NO_ID) {  // No exchange, a plain 2 account transfer
       tmp_splits << Transaction::Split(total, _controller->account()->id(),
                                        _controller->account()->mainCurrency());
       tmp_splits << Transaction::Split(-total, idTransfer, transferCurrency);
+    } else {  // Banner transaction
+      tmp_splits << Transaction::Split(0, _controller->account()->id(),
+                                       _controller->account()->mainCurrency());
     }
   } else {
     // Keep only the non-empty splits
@@ -1672,9 +1678,9 @@ LedgerWidgetDelegate::LedgerWidgetDelegate(const LedgerController* _controller,
       m_currentEditor(nullptr) {
   QSettings settings;
   m_rowHeight = settings.value("Ledger/RowHeight").toInt();
-//  if (m_rowHeight <= 0) {
-//    m_rowHeight = 26;
-//  }
+  //  if (m_rowHeight <= 0) {
+  //    m_rowHeight = 26;
+  //  }
 }
 
 void LedgerWidgetDelegate::paint(QPainter* _painter,
@@ -1683,6 +1689,7 @@ void LedgerWidgetDelegate::paint(QPainter* _painter,
   bool paintIcon = false;
 
   QPixmap toPaint;
+  QColor backgroundColor;
 
   QStyleOptionViewItem newOption = _option;
   initStyleOption(&newOption, _index);
@@ -1692,6 +1699,7 @@ void LedgerWidgetDelegate::paint(QPainter* _painter,
 
   const LedgerController* con =
       qobject_cast<const LedgerController*>(_index.model());
+  const int mainRow = con->mapToCacheRow(_index);
 
   if (con) {
     const int mainRow = con->mapToCacheRow(_index);
@@ -1711,6 +1719,20 @@ void LedgerWidgetDelegate::paint(QPainter* _painter,
 
   if (_index.column() == m_controller->col_status()) {
     paintIcon = true;
+
+    if (con) {
+      const int mainRow = con->mapToCacheRow(_index);
+
+      // Draw the background.
+      if (mainRow != con->newTransactionRow() &&
+          _index.column() == con->col_status()) {
+        QString customColor =
+            con->transactionAtRow(mainRow)->transactionColor();
+        if (!customColor.isEmpty()) {
+          backgroundColor = QColor(customColor);
+        }
+      }
+    }
 
     switch ((CacheItemType)_index.data().toInt()) {
       case CacheItemType::LockedTransaction:
@@ -1756,8 +1778,11 @@ void LedgerWidgetDelegate::paint(QPainter* _painter,
   }
 
   if (paintIcon) {
-    if (newOption.state & QStyle::State_Selected)
+    if (newOption.state & QStyle::State_Selected) {
       _painter->fillRect(newOption.rect, newOption.palette.highlight());
+    } else if (backgroundColor.isValid()) {
+      _painter->fillRect(newOption.rect, backgroundColor);
+    }
 
     if (!toPaint.isNull()) {
       _painter->save();
@@ -1796,7 +1821,7 @@ void LedgerWidgetDelegate::paint(QPainter* _painter,
   QPen pen;
   QRect borderRect = newOption.rect;
   borderRect.translate(-1, 0);
-  pen.setColor(QColor("#E8E8E8"));
+  pen.setColor(BORDER_COLOR);
   pen.setWidth(1);
   _painter->save();
   _painter->setPen(pen);
@@ -1817,9 +1842,8 @@ void LedgerWidgetDelegate::paint(QPainter* _painter,
     _painter->drawLine(borderRect.bottomLeft(), borderRect.bottomRight());
   }
 
-  if (_index.column() ==
-      _index.model()->columnCount() -
-          1)  // Last column, draw right vertical line
+  if (_index.column() == _index.model()->columnCount() -
+                             1)  // Last column, draw right vertical line
   {
     _painter->drawLine(borderRect.topRight(), borderRect.bottomRight());
   }
@@ -1860,7 +1884,8 @@ QWidget* LedgerWidgetDelegate::createEditor(QWidget* _parent,
     const Account* a =
         static_cast<const LedgerController*>(_index.model())->account();
 
-    int displayFlags = a->allCurrencies().count() > 1 ? Flag_MultipleCurrencies : Flag_None;
+    int displayFlags =
+        a->allCurrencies().count() > 1 ? Flag_MultipleCurrencies : Flag_None;
     setCurrentEditor(new AccountSelector(
         displayFlags,
         AccountTypeFlags::Flag_All & ~AccountTypeFlags::Flag_Investment,
@@ -1972,7 +1997,7 @@ void LedgerWidgetDelegate::setColumnWidth(LedgerWidget* _view) const {
   _view->setColumnWidth(m_controller->col_memo(), 150);
   _view->setColumnWidth(m_controller->col_payee(), 150);
   _view->setColumnWidth(m_controller->col_cleared(), 26);
-  _view->setColumnWidth(m_controller->col_transfer(), 200);
+  _view->setColumnWidth(m_controller->col_transfer(), 250);
   _view->setColumnWidth(m_controller->col_debit(), 90);
   _view->setColumnWidth(m_controller->col_credit(), 90);
   _view->setColumnWidth(m_controller->col_balance(), 90);
@@ -1982,4 +2007,4 @@ void LedgerWidgetDelegate::setColumnWidth(LedgerWidget* _view) const {
                                           QHeaderView::Stretch);
   }
 }
-}
+}  // namespace KLib
