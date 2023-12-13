@@ -37,8 +37,10 @@
 #include "../../model/account.h"
 #include "../../model/ledger.h"
 #include "../../model/modelexception.h"
+#include "../../model/transactionmanager.h"
 #include "../core.h"
-#include "../dialogs/optionsdialog.h"
+#include "ui/dialogs/formselectaccount.h"
+#include "ui/dialogs/optionsdialog.h"
 
 namespace KLib {
 
@@ -793,6 +795,16 @@ void LedgerWidget::createBasicActions() {
     }
 
     int new_account_id = Constants::NO_ID;
+    if (!FormSelectAccount::selectAccount(
+            this, &new_account_id, Flag_None,
+            AccountTypeFlags::Flag_AllButInvTrad)) {
+      return;
+    }
+
+    if (new_account_id == m_controller->account()->id()) {
+      return;
+    }
+
     reassignSelected(new_account_id);
   };
 
@@ -832,18 +844,16 @@ void LedgerWidget::createBasicActions() {
   m_basicActions[BasicLedgerAction::Delete] = new LedgerAction(
       new QAction(Core::icon("trash"), tr("&Delete"), this), true,
       [this](const QList<int>& rows) {
-        return m_account->isOpen() &&
-               (rows.count() > 1 ||
-                (rows.count() == 1 && rows.first() != newTransactionRow()));
+        return m_account->isOpen() && rows.count() >= 1 &&
+               !rows.contains(newTransactionRow());
       },
       askForDelete);
 
   m_basicActions[BasicLedgerAction::Reassign] = new LedgerAction(
       new QAction(Core::icon("reassign"), tr("&Reassign"), this), true,
       [this](const QList<int>& rows) {
-        return m_account->isOpen() &&
-               (rows.count() > 1 ||
-                (rows.count() == 1 && rows.first() != newTransactionRow()));
+        return m_account->isOpen() && rows.count() >= 1 &&
+               !rows.contains(newTransactionRow());
       },
       askForReassign);
 
@@ -1129,14 +1139,39 @@ void LedgerWidget::reassignSelected(int new_account_id) {
   std::vector<int> selected_transactions;
   for (int row : selectedRows()) {
     if (row == newTransactionRow() || m_controller->rowIsSchedule(row)) {
-      QMessageBox::warning(this, tr("Reassign Transactions"),
-                           tr("Schedules may not be reassign. Un-select "
-                              "schedules before continuing."));
-      return;
-    } else {
-      selected_transactions.push_back(
-          m_controller->transactionAtRow(row)->id());
+      continue;
     }
+    selected_transactions.push_back(m_controller->transactionAtRow(row)->id());
+  }
+
+  const int ledger_account_id = m_controller->account()->id();
+  QStringList errors;
+  for (int transaction_id : selected_transactions) {
+    Transaction* transaction =
+        TransactionManager::instance()->get(transaction_id);
+    QList<KLib::Transaction::Split> splits = transaction->splits();
+    bool modified = false;
+    for (Transaction::Split& split : splits) {
+      if (split.idAccount == ledger_account_id) {
+        split.idAccount = new_account_id;
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      try {
+        transaction->setSplits(splits);
+      } catch (ModelException e) {
+        errors << tr("Unable to update transaction %1: %2")
+                      .arg(transaction_id)
+                      .arg(e.description());
+      }
+    }
+  }
+  if (!errors.empty()) {
+    QMessageBox::warning(
+        this, tr("Delete Transactions"),
+        tr("The following errors occured:\n\n %1").arg(errors.join("\n")));
   }
 }
 

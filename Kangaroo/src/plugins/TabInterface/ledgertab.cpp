@@ -99,6 +99,8 @@ LedgerTab::LedgerTab(Account* _account, QWidget* parent)
       m_ledgerWidget->basicAction(BasicLedgerAction::Delete)->action);
   bottomToolbar->addAction(
       m_ledgerWidget->basicAction(BasicLedgerAction::Duplicate)->action);
+  bottomToolbar->addAction(
+      m_ledgerWidget->basicAction(BasicLedgerAction::Reassign)->action);
 
   bottomToolbar->addWidget(sep1);
 

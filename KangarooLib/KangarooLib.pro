@@ -62,6 +62,7 @@ SOURCES += \
     ui/actionmanager/actionmanager.cpp \
     ui/actionmanager/command.cpp \
     ui/actionmanager/qttoolbardialog.cpp \
+    ui/dialogs/formselectaccount.cpp \
     ui/dialogs/settingsdialogs/generalsettings.cpp \
     ui/dialogs/settingsdialogs/keyshortcutssettings.cpp \
     ui/dialogs/camsegdialog.cpp \
@@ -178,6 +179,7 @@ HEADERS += \
     ui/actionmanager/actionmanager.h \
     ui/actionmanager/command.h \
     ui/actionmanager/qttoolbardialog.h \
+    ui/dialogs/formselectaccount.h \
     ui/dialogs/settingsdialogs/generalsettings.h \
     ui/dialogs/settingsdialogs/keyshortcutssettings.h \
     ui/dialogs/camsegdialog.h \
