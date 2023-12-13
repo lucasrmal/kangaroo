@@ -20,6 +20,7 @@ along with Kangaroo. If not, see <http://www.gnu.org/licenses/>.
 #define TABINTERFACEPLUGIN_H
 
 #include <KangarooLib/iplugin.h>
+
 #include <QObject>
 
 class CentralWidget;
@@ -27,54 +28,46 @@ class IncomeExpenseTab;
 class QAction;
 class AllAccountsTab;
 
-class TabInterfacePlugin : public QObject, public KLib::IPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "Kangaroo.IPlugin/1.0")
-    Q_INTERFACES(KLib::IPlugin)
+class TabInterfacePlugin : public QObject, public KLib::IPlugin {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID "Kangaroo.IPlugin/1.0")
+  Q_INTERFACES(KLib::IPlugin)
 
-    public:
-        TabInterfacePlugin();
+ public:
+  TabInterfacePlugin();
 
-        bool initialize(QString& p_errorMessage);
+  bool initialize(QString& p_errorMessage);
 
-        void checkSettings(QSettings& settings) const;
+  void checkSettings(QSettings& settings) const;
 
-        void onLoad();
-        void onUnload();
+  void onLoad();
+  void onUnload();
 
-        void onShutdown();
+  void onShutdown();
 
-        QString name() const;
-        QString version() const;
-        QString description() const;
-        QString author() const;
-        QString copyright() const;
-        QString url() const;
+  QString name() const;
+  QString version() const;
+  QString description() const;
+  QString author() const;
+  QString copyright() const;
+  QString url() const;
 
-        QStringList requiredPlugins() const;
+  QStringList requiredPlugins() const;
 
-    public slots:
-        void createAccount();
-        void editAccount();
-        void closeAccount();
-        void reopenAccount();
-        void removeAccount();
-        void openLedger();
-        void showAllAccounts(bool _show);
+ public slots:
+  void showAllAccountsTab();
+  void showIncomeExpenseTab();
+  void lookupAccount();
 
-        void showAllAccountsTab();
-        void showIncomeExpenseTab();
+ private:
+  CentralWidget* m_centralWidget;
 
-    private:
-        CentralWidget* m_centralWidget;
+  AllAccountsTab* m_allAccountsTab;
+  IncomeExpenseTab* m_incomeExpenseTab;
 
-        AllAccountsTab* m_allAccountsTab;
-        IncomeExpenseTab* m_incomeExpenseTab;
-
-        QAction* mnuShowIncomeExpenses;
-        QAction* mnuShowAllAccounts;
-
+  QAction* mnuShowIncomeExpenses;
+  QAction* mnuShowAllAccounts;
+  QAction* mnuLookupAccount;
 };
 
-#endif // TABINTERFACEPLUGIN_H
+#endif  // TABINTERFACEPLUGIN_H

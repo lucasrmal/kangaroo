@@ -3,9 +3,9 @@
 
 #include <QWidget>
 
-#include "klib.h"
-#include "ui/dialogs/camsegdialog.h"
-#include "ui/widgets/accountselector.h"
+#include "../../klib.h"
+#include "../widgets/accountselector.h"
+#include "camsegdialog.h"
 
 namespace KLib {
 
@@ -26,6 +26,7 @@ class FormSelectAccount : public CAMSEGDialog {
     @return True if the user accepted the dialog, or false if he rejected it.
   */
   static bool selectAccount(QWidget* parent, int* selected_account_id,
+                            const QString& title,
                             int account_selection_flags = Flag_None,
                             int account_type_flags = AccountTypeFlags::Flag_All,
                             int initial_account_id = Constants::NO_ID);

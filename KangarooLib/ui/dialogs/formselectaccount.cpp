@@ -16,11 +16,13 @@ FormSelectAccount::FormSelectAccount(int account_selection_flags,
 }
 
 bool FormSelectAccount::selectAccount(QWidget* parent, int* selected_account_id,
+                                      const QString& title,
                                       int account_selection_flags,
                                       int account_type_flags,
                                       int initial_account_id) {
   bool returnValue = false;
   FormSelectAccount dialog(account_selection_flags, account_type_flags, parent);
+  dialog.setBothTitles(title);
 
   if (initial_account_id != Constants::NO_ID) {
     dialog.account_selector_->setCurrentAccount(initial_account_id);
