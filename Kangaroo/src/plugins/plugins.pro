@@ -7,7 +7,8 @@ SUBDIRS += TabInterface \
            ImportExport \
            KMyMoneyImport \
            #ManagePrices \
-           YahooQuotes \
+           StockQuotes \
+           # YahooQuotes \
            UpdatePrices \
            Schedules \
            # Console \

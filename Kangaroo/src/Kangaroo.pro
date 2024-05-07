@@ -29,7 +29,17 @@ OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui
 TEMPLATE = app
-unix:LIBS += -L/lib64 -L$$PWD/../lib -lkangaroo
+
+# In order to link openSSL:
+# wget https://www.openssl.org/source/openssl-1.1.1q.tar.gz
+# Compile:
+# tar -xf openssl-1.1.1q.tar.gz
+# cd openssl-1.1.1q
+# ./config
+# make
+# Then copy libssl and libcrypto to the libs folder.
+
+unix:LIBS += -L/lib64 -L$$PWD/../lib -lkangaroo -lcrypto -lssl
       #-L/lib64
 # TRANSLATIONS += camseg_fr.ts \
 #     camseg_tr.ts
