@@ -35,6 +35,7 @@
 #include "../../controller/ledger/ledgercontroller.h"
 #include "../../controller/ledger/ledgercontrollermanager.h"
 #include "../../model/account.h"
+#include "../../model/investmenttransaction.h"
 #include "../../model/ledger.h"
 #include "../../model/modelexception.h"
 #include "../../model/transactionmanager.h"
@@ -788,8 +789,15 @@ void LedgerWidget::createBasicActions() {
     for (int row : selectedRows()) {
       if (m_controller->rowIsSchedule(row)) {
         QMessageBox::warning(this, tr("Reassign Transactions"),
-                             tr("Schedules may not be reassign. Un-select "
+                             tr("Schedules may not be reassigned. Un-select "
                                 "schedules before continuing."));
+        return;
+      } else if (qobject_cast<const InvestmentTransaction*>(
+                     m_controller->transactionAtRow(row))) {
+        QMessageBox::warning(
+            this, tr("Reassign Transactions"),
+            tr("Investment Transactions may not be reassigned. Un-select "
+               "investment transactions before continuing."));
         return;
       }
     }
@@ -1146,31 +1154,11 @@ void LedgerWidget::reassignSelected(int new_account_id) {
 
   const int ledger_account_id = m_controller->account()->id();
   QStringList errors;
-  for (int transaction_id : selected_transactions) {
-    Transaction* transaction =
-        TransactionManager::instance()->get(transaction_id);
-    QList<KLib::Transaction::Split> splits = transaction->splits();
-    bool modified = false;
-    for (Transaction::Split& split : splits) {
-      if (split.idAccount == ledger_account_id) {
-        split.idAccount = new_account_id;
-        modified = true;
-      }
-    }
-
-    if (modified) {
-      try {
-        transaction->setSplits(splits);
-      } catch (ModelException e) {
-        errors << tr("Unable to update transaction %1: %2")
-                      .arg(transaction_id)
-                      .arg(e.description());
-      }
-    }
-  }
+  TransactionManager::instance()->reassignTransactions(
+      selected_transactions, ledger_account_id, new_account_id, &errors);
   if (!errors.empty()) {
     QMessageBox::warning(
-        this, tr("Delete Transactions"),
+        this, tr("Reassign Transactions"),
         tr("The following errors occured:\n\n %1").arg(errors.join("\n")));
   }
 }

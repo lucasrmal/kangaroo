@@ -22,53 +22,56 @@
 
 #include <QList>
 #include <QVector>
+
+#include "../interfaces/scriptable.h"
 #include "stored.h"
 #include "transaction.h"
-#include "../interfaces/scriptable.h"
 
-namespace KLib
-{
+namespace KLib {
 
-class TransactionManager : public IStored
-{
-    Q_OBJECT
-    K_SCRIPTABLE(TransactionManager)
+class TransactionManager : public IStored {
+  Q_OBJECT
+  K_SCRIPTABLE(TransactionManager)
 
-    Q_PROPERTY(int count READ count)
+  Q_PROPERTY(int count READ count)
 
-    public:
+ public:
+  Q_INVOKABLE KLib::Transaction* get(int _id) const;
 
-        Q_INVOKABLE KLib::Transaction* get(int _id) const;
+  int count() const { return m_transactions.size(); }
 
-        int count() const { return m_transactions.size(); }
+  Q_INVOKABLE const QHash<int, Transaction*>& transactions() const {
+    return m_transactions;
+  }
 
-        Q_INVOKABLE const QHash<int, Transaction*>& transactions() const { return m_transactions; }
+  void reassignTransactions(const std::vector<int>& transaction_ids,
+                            int reassign_from, int reassign_to,
+                            QStringList* errors);
 
-        static TransactionManager* instance() { return m_instance; }
+  static TransactionManager* instance() { return m_instance; }
 
-    protected:
-        virtual void load(QXmlStreamReader& _reader) override;
-        virtual void save(QXmlStreamWriter& _writer) const override;
-        virtual void unload() override;
-        virtual void afterLoad() override;
+ protected:
+  virtual void load(QXmlStreamReader& _reader) override;
+  virtual void save(QXmlStreamWriter& _writer) const override;
+  virtual void unload() override;
+  virtual void afterLoad() override;
 
-    private:
-        void add(Transaction* _transaction);
-        void remove(int _id);
+ private:
+  void add(Transaction* _transaction);
+  void remove(int _id);
 
+  QHash<int, Transaction*> m_transactions;
 
-        QHash<int, Transaction*> m_transactions;
+  static int newId();
 
-        static int newId();
+  static TransactionManager* m_instance;
+  static int m_nextId;
 
-        static TransactionManager* m_instance;
-        static int m_nextId;
-
-        friend class LedgerManager;
+  friend class LedgerManager;
 };
 
-}
+}  // namespace KLib
 
 Q_DECLARE_METATYPE(KLib::TransactionManager*)
 
-#endif // TRANSACTIONMANAGER_H
+#endif  // TRANSACTIONMANAGER_H
