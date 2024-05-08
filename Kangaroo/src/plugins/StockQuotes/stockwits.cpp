@@ -40,7 +40,6 @@ void StockWits::onReply(QNetworkReply* reply) {
 
   QJsonParseError error;
   QJsonDocument json_doc = QJsonDocument::fromJson(reply->readAll(), &error);
-  qDebug() << json_doc.toJson();
 
   if (error.error != QJsonParseError::NoError) {
     emit requestError(queryId, error.errorString());
