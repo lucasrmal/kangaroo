@@ -18,6 +18,10 @@
  */
 
 #include "account.h"
+
+#include <QStack>
+#include <QXmlStreamReader>
+
 #include "../controller/io.h"
 #include "../ui/core.h"
 #include "currency.h"
@@ -28,9 +32,6 @@
 #include "pricemanager.h"
 #include "schedule.h"
 #include "security.h"
-
-#include <QStack>
-#include <QXmlStreamReader>
 
 namespace KLib {
 int Account::m_nextId = 1;
@@ -47,6 +48,7 @@ Account::Account()
       m_isOpen(true),
       m_idInstitution(Constants::NO_ID),
       m_idSecurity(Constants::NO_ID),
+      m_idDefaultDividendAccount(Constants::NO_ID),
       m_parent(nullptr),
       m_ledger(nullptr),
       m_properties(new Properties()),
@@ -55,8 +57,8 @@ Account::Account()
 }
 
 Account::~Account() {
-  while (!m_children.isEmpty()) {
-    delete m_children.takeFirst();
+  for (Account* a : m_children) {
+    delete a;
   }
 
   m_ledger->deleteLater();
@@ -64,8 +66,7 @@ Account::~Account() {
 }
 
 Account* Account::getFromPath(const QString& _path) {
-  QStringList path =
-      _path.split(Account::PATH_SEPARATOR, QString::KeepEmptyParts);
+  QStringList path = _path.split(Account::PATH_SEPARATOR, Qt::KeepEmptyParts);
   Account* cur = nullptr;
 
   if (path.length() > 0) {
@@ -144,7 +145,7 @@ void Account::moveToParent(Account* _parent) {
     }
 
     m_parent = _parent;
-    _parent->m_children.append(this);
+    _parent->m_children.push_back(this);
     emit accountAdded(this);
     emit m_topLevel->accountModified(this);
   }
@@ -206,10 +207,20 @@ void Account::moveToParent(Account* _parent, int _newType) {
     }
 
     m_parent = _parent;
-    _parent->m_children.append(this);
+    _parent->m_children.push_back(this);
     emit accountAdded(this);
     emit m_topLevel->accountModified(this);
   }
+}
+
+Account* Account::getAccount(int _id) {
+  auto it = m_topLevel->m_accounts.find(_id);
+  if (it == m_topLevel->m_accounts.end()) {
+    ModelException::throwException(tr("No such account."), m_topLevel);
+    return nullptr;
+  }
+
+  return it.value();
 }
 
 Account* Account::getChild(int _id) const {
@@ -345,7 +356,7 @@ Account* Account::addChild(const QString& _name, int _type,
 
   setupAccount(acc);
 
-  m_children.append(acc);
+  m_children.push_back(acc);
   m_accounts[acc->m_id] = acc;
 
   emit accountAdded(acc);
@@ -504,7 +515,7 @@ void Account::setSecondaryCurrencies(const QSet<QString>& _currencies) {
     removed.remove(m_mainCurrency);
     QSet<QString> used = m_ledger->currenciesUsed();
 
-    if (!used.intersect(removed).isEmpty()) {
+    if (used.intersects(removed)) {
       ModelException::throwException(
           tr("Cannot remove secondary currencies that are in use."), this);
     }
@@ -694,6 +705,25 @@ void Account::setIdSecurity(int _id) {
   if (!onHoldToModify()) emit accountModified(this);
 }
 
+void Account::setIdDefaultDividendAccount(int _id) {
+  if (_id == m_idDefaultDividendAccount) return;
+
+  if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE) {
+    ModelException::throwException(tr("Cannot set the default dividend account "
+                                      "of a non-investment account."),
+                                   this);
+  }
+
+  if (_id != Constants::NO_ID) {
+    // Check that it exists
+    Account::getAccount(_id);
+  }
+
+  m_idDefaultDividendAccount = _id;
+
+  if (!onHoldToModify()) emit accountModified(this);
+}
+
 Amount Account::balance() const { return balanceBetween(QDate(), QDate()); }
 
 Amount Account::balanceAt(const QDate& _date) const {
@@ -801,13 +831,17 @@ void Account::rec_load(QXmlStreamReader& _reader, Account* _parent) {
       IO::getOptAttribute("picture", attributes, Constants::NO_ID).toInt();
   m_idSecurity =
       IO::getOptAttribute("security", attributes, Constants::NO_ID).toInt();
+  m_idDefaultDividendAccount =
+      IO::getOptAttribute("dividendaccount", attributes, Constants::NO_ID)
+          .toInt();
 
-  QStringList clist = IO::getOptAttribute("secondarycurrencies", attributes, "")
-                          .split(',', QString::SkipEmptyParts);
+  const QStringList clist =
+      IO::getOptAttribute("secondarycurrencies", attributes, "")
+          .split(',', Qt::SkipEmptyParts);
 
   m_secondaryCurrencies.clear();
 
-  for (QString c : clist) {
+  for (const QString& c : clist) {
     m_secondaryCurrencies.insert(c);
   }
 
@@ -826,7 +860,7 @@ void Account::rec_load(QXmlStreamReader& _reader, Account* _parent) {
       if (_reader.tokenType() == QXmlStreamReader::StartElement &&
           _reader.name() == StdTags::ACCOUNT) {
         Account* c = new Account();
-        m_children.append(c);
+        m_children.push_back(c);
 
         c->rec_load(_reader, this);
         m_accounts[c->m_id] = c;
@@ -850,7 +884,7 @@ void Account::rec_save(QXmlStreamWriter& _writer) const {
   _writer.writeAttribute("name", m_name);
   _writer.writeAttribute("currency", m_mainCurrency);
   _writer.writeAttribute("secondarycurrencies",
-                         QStringList(m_secondaryCurrencies.toList()).join(','));
+                         m_secondaryCurrencies.values().join(','));
   _writer.writeAttribute("code", m_code);
   _writer.writeAttribute("note", m_note);
   _writer.writeAttribute("placeholder", m_isPlaceholder ? "true" : "false");
@@ -858,6 +892,8 @@ void Account::rec_save(QXmlStreamWriter& _writer) const {
   _writer.writeAttribute("institution", QString::number(m_idInstitution));
   _writer.writeAttribute("picture", QString::number(m_idPicture));
   _writer.writeAttribute("security", QString::number(m_idSecurity));
+  _writer.writeAttribute("dividendaccount",
+                         QString::number(m_idDefaultDividendAccount));
   m_properties->save(_writer);
 
   for (Account* a : m_children) {
@@ -1038,7 +1074,7 @@ bool Account::possibleType(int _childType, int _parentType) {
 
 QList<int> Account::possibleTypes(int _parentType) {
   if (m_customTypes.contains(_parentType)) {
-    return m_customTypes[_parentType]->children.toList();
+    return m_customTypes[_parentType]->children.values();
   } else {
     QList<int> types;
 
@@ -1085,7 +1121,7 @@ QList<int> Account::possibleTypes(int _parentType) {
         break;
     }
 
-    for (CustomType* c : m_customTypes) {
+    for (CustomType* c : qAsConst(m_customTypes)) {
       if (c->parents.contains(_parentType)) {
         types << c->id;
       }
@@ -1509,7 +1545,7 @@ bool Account::addCustomType(CustomType* _custom, QString& _errorMsg) {
     return false;
   } else {
     // Check the parents
-    for (int i : _custom->parents) {
+    for (int i : qAsConst(_custom->parents)) {
       if (i == AccountType::TOPLEVEL ||
           (i != _custom->id && typeToString(i).isEmpty())) {
         _errorMsg = tr("At least one of the parents is invalid.");
@@ -1518,7 +1554,7 @@ bool Account::addCustomType(CustomType* _custom, QString& _errorMsg) {
     }
 
     // Check the children
-    for (int i : _custom->children) {
+    for (int i : qAsConst(_custom->children)) {
       if (i == AccountType::TOPLEVEL ||
           (i != _custom->id && typeToString(i).isEmpty())) {
         _errorMsg = tr("At least one of the children is invalid.");
@@ -1556,4 +1592,4 @@ bool Account::addCustomType(CustomType* _custom, QString& _errorMsg) {
   m_customTypes[_custom->id] = _custom;
   return true;
 }
-}
+}  // namespace KLib

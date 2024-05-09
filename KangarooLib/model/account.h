@@ -21,9 +21,11 @@
 #define ACCOUNT_H
 
 #include <QLinkedList>
-#include <QString>
 #include <QSet>
+#include <QString>
 #include <functional>
+#include <vector>
+
 #include "../amount.h"
 #include "../interfaces/scriptable.h"
 #include "properties.h"
@@ -167,10 +169,14 @@ class Account : public IStored {
   */
   Q_INVOKABLE void moveToParent(KLib::Account* _parent, int _newType);
 
-  int childCount() const { return m_children.count(); }
-  Q_INVOKABLE const QLinkedList<KLib::Account*> getChildren() const {
-    return m_children;
-  }
+  int childCount() const { return m_children.size(); }
+  const std::vector<KLib::Account*>& getChildren() const { return m_children; }
+
+  /**
+   * @brief getAccount returns an account by ID if it exists, otherwise throws
+   * an exception. This is O(1)
+   */
+  static KLib::Account* getAccount(int id);
 
   Q_INVOKABLE KLib::Account* getChild(int _id) const;
   Q_INVOKABLE KLib::Account* getChild(const QString& _code) const;
@@ -200,7 +206,7 @@ class Account : public IStored {
   int type() const { return m_type; }
   QString name() const {
     if (m_idSecurity != Constants::NO_ID) {
-        return SecurityManager::instance()->get(m_idSecurity)->formattedName();
+      return SecurityManager::instance()->get(m_idSecurity)->formattedName();
     }
 
     return m_name;
@@ -213,6 +219,7 @@ class Account : public IStored {
   int idInstitution() const { return m_idInstitution; }
   int idSecurity() const { return m_idSecurity; }
   int idPicture() const { return m_idPicture; }
+  int idDefaultDividendAccount() const { return m_idDefaultDividendAccount; }
 
   const QSet<QString>& secondaryCurrencies() const {
     return m_secondaryCurrencies;
@@ -230,6 +237,7 @@ class Account : public IStored {
   void setIdInstitution(int _id);
   void setIdSecurity(int _id);
   void setIdPicture(int _id);
+  void setIdDefaultDividendAccount(int id);
 
   QPixmap defaultPicture(bool _thumbnail = false) const;
 
@@ -266,7 +274,7 @@ class Account : public IStored {
   }
   Q_INVOKABLE KLib::Properties* properties() const { return m_properties; }
 
-  Q_INVOKABLE void doneHoldToModify();
+  Q_INVOKABLE void doneHoldToModify() override;
 
   Q_INVOKABLE KLib::Account* account(int _id) const {
     return m_accounts.value(_id);
@@ -336,8 +344,9 @@ class Account : public IStored {
   int m_idInstitution;
   int m_idSecurity;
   int m_idPicture;
+  int m_idDefaultDividendAccount;
 
-  QLinkedList<Account*> m_children;
+  std::vector<Account*> m_children;
   Account* m_parent;
 
   Ledger* m_ledger;
@@ -350,7 +359,7 @@ class Account : public IStored {
   static QHash<int, CustomType*> m_customTypes;
 };
 
-}  // Namespace
+}  // namespace KLib
 
 Q_DECLARE_METATYPE(KLib::Account*)
 
