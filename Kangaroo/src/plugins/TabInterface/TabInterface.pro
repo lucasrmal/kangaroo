@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Kangaroo. If not, see <http://www.gnu.org/licenses/>.
 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++20
 QT += widgets script printsupport #webkitwidgets
 TARGET = TabInterface
 TEMPLATE = lib

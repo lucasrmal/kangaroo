@@ -85,7 +85,8 @@ FormEditAccount::FormEditAccount(KLib::Account* _account, QWidget* _parent)
   m_cboCurrency = new QComboBox(this);
   m_cboSecurity = new QComboBox(this);
   m_cboInstitution = new QComboBox(this);
-  m_cboParent = new AccountSelector(Flag_Placeholders, this);
+  m_cboParent = new AccountSelector(
+      {.selectorFlags = AccountSelectorFlags::Flag_IncludePlaceholders}, this);
   m_cboType = new QComboBox(this);
   m_txtNote = new QTextEdit(this);
   m_lblCreditLimit = new QLabel(tr("Credit &Limit:"), this);

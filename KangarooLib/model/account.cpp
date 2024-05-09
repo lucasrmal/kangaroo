@@ -431,10 +431,19 @@ bool Account::canBeRemoved() const {
             !m_customTypes[m_type]->deleteValidation(this, err)));
 }
 
-QSet<QString> Account::allCurrencies() const {
-  QSet<QString> cur = m_secondaryCurrencies;
-  cur.insert(m_mainCurrency);
-  return cur;
+std::vector<QString> Account::allCurrencies() const {
+  std::vector<QString> currencies = {m_mainCurrency};
+  for (auto it = m_secondaryCurrencies.begin();
+       it != m_secondaryCurrencies.end(); ++it) {
+    if (*it == m_mainCurrency) continue;
+    currencies.push_back(*it);
+  }
+  return currencies;
+}
+
+bool Account::supportsCurrency(const QString& _currency) const {
+  return _currency == m_mainCurrency ||
+         m_secondaryCurrencies.contains(_currency);
 }
 
 void Account::setType(int _type) {

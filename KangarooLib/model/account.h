@@ -224,7 +224,8 @@ class Account : public IStored {
   const QSet<QString>& secondaryCurrencies() const {
     return m_secondaryCurrencies;
   }
-  QSet<QString> allCurrencies() const;
+  std::vector<QString> allCurrencies() const;
+  bool supportsCurrency(const QString& _currency) const;
 
   void setType(int _type);
   void setName(const QString& _name);

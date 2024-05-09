@@ -5,7 +5,7 @@ script
 TEMPLATE = lib
 DEFINES += STOCKQUOTES_LIBRARY
 
-CONFIG += c++17
+QMAKE_CXXFLAGS += -std=c++20
 TEMPLATE = lib
 CONFIG       += plugin
 DESTDIR = ../../../plugins

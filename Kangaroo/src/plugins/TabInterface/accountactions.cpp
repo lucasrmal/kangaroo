@@ -117,8 +117,8 @@ bool AccountActions::reassignAllTransactions(KLib::Account* _account) {
   int new_account_id = Constants::NO_ID;
   if (!FormSelectAccount::selectAccount(
           Core::instance()->mainWindow(), &new_account_id,
-          QObject::tr("Reassign All Transactions To Account"), Flag_None,
-          AccountTypeFlags::Flag_AllButInvTrad) ||
+          QObject::tr("Reassign All Transactions To Account"),
+          {.typeFlags = AccountTypeFlags::Flag_AllButInvTrad}) ||
       new_account_id == _account->id()) {
     return false;
   }

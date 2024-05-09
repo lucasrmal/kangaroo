@@ -3,7 +3,7 @@
 # Project created by QtCreator 2014-07-09T08:38:55
 #
 #-------------------------------------------------
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++20
 
 TARGET = kangaroo
 

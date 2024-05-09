@@ -4,8 +4,8 @@
 
 InvestmentSettings::InvestmentSettings(QWidget* _parent)
     : AccountEditTab(_parent) {
-  m_defaultDividendAccountSelector =
-      new KLib::AccountSelector(KLib::AccountTypeFlags::Flag_Income, this);
+  m_defaultDividendAccountSelector = new KLib::AccountSelector(
+      {.typeFlags = KLib::AccountTypeFlags::Flag_Income}, this);
 
   QFormLayout* layout = new QFormLayout(this);
   layout->addRow(tr("Default &Dividend Account:"),
@@ -22,11 +22,12 @@ void InvestmentSettings::fillData(const KLib::Account* _account) {
 }
 
 void InvestmentSettings::save(KLib::Account* _account) const {
-  if (!enableIf(_account->type()) ||
-      !m_defaultDividendAccountSelector->currentAccount()) {
+  if (!enableIf(_account->type())) {
     return;
   }
 
   _account->setIdDefaultDividendAccount(
-      m_defaultDividendAccountSelector->currentAccount()->id());
+      m_defaultDividendAccountSelector->currentAccount()
+          ? m_defaultDividendAccountSelector->currentAccount()->id()
+          : KLib::Constants::NO_ID);
 }
