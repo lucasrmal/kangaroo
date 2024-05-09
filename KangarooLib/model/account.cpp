@@ -403,6 +403,13 @@ bool Account::removeChild(int _id, const Key& _k) {
         }
       }
 
+      // Remove all dividend accounts pointing to this
+      for (Account* a : m_accounts) {
+        if (a->idDefaultDividendAccount() == _id) {
+          a->setIdDefaultDividendAccount(Constants::NO_ID);
+        }
+      }
+
       LedgerManager::instance()->removeAccount(del);
 
       emit accountRemoved(del);
