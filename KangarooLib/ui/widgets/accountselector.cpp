@@ -191,21 +191,6 @@ void AccountSelectorModel::loadData() {
       return false;
     }
     return true;
-
-    //    return (params.idExcludeAccount == Constants::NO_ID ||
-    //            a->id() == params.idExcludeAccount) &&
-    //           (a->isOpen() ||
-    //            params.selectorFlags &
-    //            AccountSelectorFlags::Flag_IncludeClosed) &&
-    //           (!a->isPlaceholder() ||
-    //            params.selectorFlags &
-    //                AccountSelectorFlags::Flag_IncludePlaceholders) &&
-    //           (params.idSecurityRestrict == Constants::NO_ID ||
-    //            params.idSecurityRestrict == a->idSecurity()) &&
-    //           (params.currencyRestrict.isEmpty() ||
-    //            a->supportsCurrency(params.currencyRestrict)) &&
-    //           Account::matchesFlags(a, params.selectorFlags) &&
-    //           (!params.customFilter || params.customFilter(a));
   };
   rec_load(Account::getTopLevel(), "", filterFn);
 }
