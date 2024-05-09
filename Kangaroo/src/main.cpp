@@ -16,125 +16,88 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <KangarooLib/ui/actionmanager/actionmanager.h>
+#include <KangarooLib/ui/core.h>
+#include <KangarooLib/ui/mainwindow.h>
+#include <KangarooLib/ui/settingsmanager.h>
+
 #include <QApplication>
 #include <QCoreApplication>
-#include <QSplashScreen>
-#include <QTextCodec>
-#include <QTranslator>
+#include <QDebug>
 #include <QDir>
 #include <QFont>
 #include <QFontDatabase>
 #include <QLibraryInfo>
 #include <QSettings>
+#include <QSplashScreen>
+#include <QTextCodec>
+#include <QTranslator>
 #include <ctime>
-#include <QDebug>
 
 #include "util.h"
-
-#include <KangarooLib/ui/core.h>
-#include <KangarooLib/ui/mainwindow.h>
-#include <KangarooLib/ui/settingsmanager.h>
-#include <KangarooLib/ui/actionmanager/actionmanager.h>
 
 #define SPLASH_SCREEN_TIME 3
 
 using namespace KLib;
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
+int main(int argc, char* argv[]) {
+  qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
 
-    //--------------------General Configuration--------------------
-    QCoreApplication::setApplicationName(Core::APP_NAME);
-    QCoreApplication::setApplicationVersion(Core::APP_VERSION);
-    QCoreApplication::setOrganizationName(Core::APP_AUTHOR);
-    QCoreApplication::setOrganizationDomain(Core::APP_WEBSITE);
+  QApplication a(argc, argv);
 
-    Util::setupPaths();
+  //--------------------General Configuration--------------------
+  QCoreApplication::setApplicationName(Core::APP_NAME);
+  QCoreApplication::setApplicationVersion(Core::APP_VERSION);
+  QCoreApplication::setOrganizationName(Core::APP_AUTHOR);
+  QCoreApplication::setOrganizationDomain(Core::APP_WEBSITE);
 
-    QFont f("Droid Sans [unknown]", 9);
-    f.setStyleName("Regular");
-    a.setFont(f);
+  Util::setupPaths();
 
-    QPixmap pixmap(Core::path(Path_Icons) + "promo.png");
-    QSplashScreen splash(pixmap);
-    splash.show();
+  QFont f("Droid Sans [unknown]", 9);
+  f.setStyleName("Regular");
+  a.setFont(f);
 
-    time_t t0 = time(NULL);
+  QPixmap pixmap(Core::path(Path_Icons) + "promo.png");
+  QSplashScreen splash(pixmap);
+  splash.show();
 
-    a.processEvents();
+  time_t t0 = time(NULL);
 
-    a.addLibraryPath(Core::path(Path_Plugins));
+  a.processEvents();
 
+  a.addLibraryPath(Core::path(Path_Plugins));
 
-    //--------------Check if old settings are present--------------
-    Util::checkOldSettings();
+  //--------------Check if old settings are present--------------
+  Util::checkOldSettings();
 
-    //-------------------------Traduction--------------------------
-//    QString     language = QSettings().value("General/Language").toString();
-//    QTranslator appTranslator,
-//                libTranslator,
-//                qtTranslator;
+  //-------------------------Traduction--------------------------
+  //    QString     language = QSettings().value("General/Language").toString();
+  //    QTranslator appTranslator,
+  //                libTranslator,
+  //                qtTranslator;
 
-//    appTranslator.load(Core::path(Path_Translations) + "camseg_" + language + ".qm");
-//    libTranslator.load(Core::path(Path_Translations) + "libcamseg_" + language + ".qm");
-//    qtTranslator. load(QString("qt_") + language, QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+  //    appTranslator.load(Core::path(Path_Translations) + "camseg_" + language
+  //    + ".qm"); libTranslator.load(Core::path(Path_Translations) +
+  //    "libcamseg_" + language + ".qm"); qtTranslator. load(QString("qt_") +
+  //    language, QLibraryInfo::location(QLibraryInfo::TranslationsPath));
 
-//    a.installTranslator(&appTranslator);
-//    a.installTranslator(&libTranslator);
-//    a.installTranslator(&qtTranslator);
+  //    a.installTranslator(&appTranslator);
+  //    a.installTranslator(&libTranslator);
+  //    a.installTranslator(&qtTranslator);
 
+  //--------------------Application Starting---------------------
+  MainWindow* w = KLib::Core::instance()->mainWindow();
+  ActionManager::instance();
+  SettingsManager::instance();
 
-    //--------------------Application Starting---------------------
-    MainWindow* w = KLib::Core::instance()->mainWindow();
-    ActionManager::instance();
-    SettingsManager::instance();
+  // Load the plugins
+  Util::loadPlugins();
 
-    //Load the plugins
-    Util::loadPlugins();
+  while (static_cast<int>(time(NULL) - t0) < SPLASH_SCREEN_TIME) {
+  }
 
-    while(static_cast<int>(time(NULL)-t0) < SPLASH_SCREEN_TIME) {}
+  splash.finish(w);
+  w->show();
 
-    splash.finish(w);
-    w->show();
-
-    return a.exec();
+  return a.exec();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
