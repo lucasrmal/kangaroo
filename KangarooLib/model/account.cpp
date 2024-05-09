@@ -465,6 +465,10 @@ void Account::setType(int _type) {
 
     m_type = _type;
 
+    if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE) {
+      m_idDefaultDividendAccount = Constants::NO_ID;
+    }
+
     if (!onHoldToModify()) emit accountModified(this);
   } else {
     ModelException::throwException(tr("This type of account is not supported "
@@ -708,7 +712,8 @@ void Account::setIdSecurity(int _id) {
 void Account::setIdDefaultDividendAccount(int _id) {
   if (_id == m_idDefaultDividendAccount) return;
 
-  if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE) {
+  if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE &&
+      _id != Constants::NO_ID) {
     ModelException::throwException(tr("Cannot set the default dividend account "
                                       "of a non-investment account."),
                                    this);

@@ -17,73 +17,50 @@ along with Kangaroo. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "accountcreateeditplugin.h"
-#include "formeditaccount.h"
-#include "accountedittab.h"
-#include "secondarycurrencies.h"
 
 #include <KangarooLib/ui/core.h>
 
+#include "formeditaccount.h"
+#include "investmentsettings.h"
+#include "secondarycurrencies.h"
+
 using namespace KLib;
 
-AccountCreateEditPlugin::AccountCreateEditPlugin()
-{
+AccountCreateEditPlugin::AccountCreateEditPlugin() {}
+
+bool AccountCreateEditPlugin::initialize(QString& p_errorMessage) {
+  Q_UNUSED(p_errorMessage)
+
+  FormEditAccount::registerTab(
+      [](QWidget* _parent) { return new InvestmentSettings(_parent); });
+  FormEditAccount::registerTab(
+      [](QWidget* _parent) { return new SecondaryCurrencies(_parent); });
+
+  return true;
 }
 
-bool AccountCreateEditPlugin::initialize(QString& p_errorMessage)
-{
-    Q_UNUSED(p_errorMessage)
-
-    FormEditAccount::registerTab([](QWidget* _parent) { return new SecondaryCurrencies(_parent); });
-
-    return true;
+void AccountCreateEditPlugin::checkSettings(QSettings& settings) const {
+  Q_UNUSED(settings)
 }
 
-void AccountCreateEditPlugin::checkSettings(QSettings& settings) const
-{
-    Q_UNUSED(settings)
+void AccountCreateEditPlugin::onLoad() {}
+
+void AccountCreateEditPlugin::onUnload() {}
+
+QString AccountCreateEditPlugin::name() const { return "AccountCreateEdit"; }
+
+QString AccountCreateEditPlugin::version() const { return "1.0"; }
+
+QString AccountCreateEditPlugin::description() const { return tr(""); }
+
+QString AccountCreateEditPlugin::author() const { return Core::APP_AUTHOR; }
+
+QString AccountCreateEditPlugin::copyright() const {
+  return Core::APP_COPYRIGHT;
 }
 
-void AccountCreateEditPlugin::onLoad()
-{
+QString AccountCreateEditPlugin::url() const { return Core::APP_WEBSITE; }
+
+QStringList AccountCreateEditPlugin::requiredPlugins() const {
+  return QStringList();  //("ManageOthers");
 }
-
-void AccountCreateEditPlugin::onUnload()
-{
-}
-
-QString AccountCreateEditPlugin::name() const
-{
-    return "AccountCreateEdit";
-}
-
-QString AccountCreateEditPlugin::version() const
-{
-    return "1.0";
-}
-
-QString AccountCreateEditPlugin::description() const
-{
-    return tr("");
-}
-
-QString AccountCreateEditPlugin::author() const
-{
-    return Core::APP_AUTHOR;
-}
-
-QString AccountCreateEditPlugin::copyright() const
-{
-    return Core::APP_COPYRIGHT;
-}
-
-QString AccountCreateEditPlugin::url() const
-{
-    return Core::APP_WEBSITE;
-}
-
-QStringList AccountCreateEditPlugin::requiredPlugins() const
-{
-    return QStringList();//("ManageOthers");
-}
-
-

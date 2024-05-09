@@ -23,11 +23,13 @@ DESTDIR = ../../../plugins
 INCLUDEPATH += ../../../../
 SOURCES += accountcreateeditplugin.cpp \
     formeditaccount.cpp \
+    investmentsettings.cpp \
     secondarycurrencies.cpp
 
 HEADERS += accountcreateeditplugin.h \
     formeditaccount.h \
     accountedittab.h \
+    investmentsettings.h \
     secondarycurrencies.h
 
 OBJECTS_DIR = build/obj
