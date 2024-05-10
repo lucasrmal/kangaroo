@@ -164,7 +164,7 @@ void AccountSelectorModel::loadData() {
   auto filterFn = [](const Account* a,
                      const AccountSelectorParams& params) -> bool {
     if (params.idExcludeAccount != Constants::NO_ID &&
-        a->id() != params.idExcludeAccount) {
+        a->id() == params.idExcludeAccount) {
       return false;
     }
     if (!a->isOpen() &&
