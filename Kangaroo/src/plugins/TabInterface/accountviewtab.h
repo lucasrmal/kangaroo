@@ -42,6 +42,7 @@ class AccountViewTab : public QWidget {
   void editAccount();
   void closeOpenAccount();
   void reassignAllTransactions();
+  void moveAllChildren();
   void deleteAccount();
   void openLedger();
   void showAllAccounts(bool _show);
@@ -71,6 +72,7 @@ class AccountViewTab : public QWidget {
   QAction* m_actEdit;
   QAction* m_actCloseOpen;
   QAction* m_actReassign;
+  QAction* m_actMoveChildren;
   QAction* m_actDelete;
   QAction* m_actShowAll;
   QAction* m_actFind;

@@ -52,6 +52,8 @@ AccountViewTab::AccountViewTab(KLib::Account* _topLevel, bool _showOpenOnly,
   m_actReassign =
       m_accountMenu->addAction(Core::icon("reassign"), tr("&Reassign"), this,
                                SLOT(reassignAllTransactions()));
+  m_actMoveChildren = m_accountMenu->addAction(
+      Core::icon(""), tr("&Move All Children"), this, SLOT(moveAllChildren()));
   m_actCloseOpen =
       m_accountMenu->addAction(Core::icon("close-bank-account"), tr("&Close"),
                                this, SLOT(closeOpenAccount()));
@@ -86,6 +88,7 @@ void AccountViewTab::onCurrentAccountChanged(KLib::Account* a) {
     m_actEdit->setEnabled(true);
     m_actReassign->setEnabled(a->type() == AccountType::INCOME ||
                               a->type() == AccountType::EXPENSE);
+    m_actMoveChildren->setEnabled(a->childCount() > 0);
     m_actCloseOpen->setEnabled(!a->isOpen() || a->canBeClosed());
     m_actDelete->setEnabled(a->childCount() == 0 &&
                             a->type() != AccountType::TOPLEVEL &&
@@ -94,6 +97,7 @@ void AccountViewTab::onCurrentAccountChanged(KLib::Account* a) {
     m_actOpen->setEnabled(false);
     m_actEdit->setEnabled(false);
     m_actReassign->setEnabled(false);
+    m_actMoveChildren->setEnabled(false);
     m_actCloseOpen->setEnabled(false);
     m_actDelete->setEnabled(false);
   }
@@ -223,6 +227,10 @@ void AccountViewTab::editAccount() {
 
 void AccountViewTab::reassignAllTransactions() {
   AccountActions::reassignAllTransactions(m_currentAccount);
+}
+
+void AccountViewTab::moveAllChildren() {
+  AccountActions::moveAllChildren(m_currentAccount);
 }
 
 void AccountViewTab::closeOpenAccount() {

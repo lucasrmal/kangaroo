@@ -140,3 +140,39 @@ bool AccountActions::reassignAllTransactions(KLib::Account* _account) {
   }
   return true;
 }
+
+bool AccountActions::moveAllChildren(KLib::Account* _account) {
+  if (!_account) {
+    return false;
+  }
+
+  int new_account_id = Constants::NO_ID;
+  if (!FormSelectAccount::selectAccount(
+          Core::instance()->mainWindow(), &new_account_id,
+          QObject::tr("Move All Children To Account"),
+          {.typeFlags =
+               AccountTypeFlags::Flag_All & ~AccountTypeFlags::Flag_Trading}) ||
+      new_account_id == _account->id()) {
+    return false;
+  }
+
+  Account* new_parent = Account::getAccount(new_account_id);
+
+  std::vector<Account*> children = _account->getChildren();
+  QStringList errors;
+  for (Account* child : children) {
+    try {
+      child->moveToParent(new_parent);
+    } catch (const ModelException& e) {
+      errors << QObject::tr("Unable to move %1: %2")
+                    .arg(child->name(), e.description());
+    }
+  }
+  if (!errors.empty()) {
+    QMessageBox::warning(Core::instance()->mainWindow(),
+                         QObject::tr("Move All Children To Account"),
+                         QObject::tr("The following errors occured:\n\n %1")
+                             .arg(errors.join("\n")));
+  }
+  return true;
+}
