@@ -2,6 +2,8 @@
 #
 # Project created by QtCreator 2014-07-09T08:38:55
 #
+# You will need the libgl1-mesa-dev and zlib1g-dev
+# packages in order to build this library.
 #-------------------------------------------------
 QMAKE_CXXFLAGS += -std=c++11
 
