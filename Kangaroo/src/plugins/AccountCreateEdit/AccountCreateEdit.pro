@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Kangaroo. If not, see <http://www.gnu.org/licenses/>.
 #
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++20
 QT += widgets script
 TARGET = AccountCreateEdit
 TEMPLATE = lib
@@ -23,11 +23,13 @@ DESTDIR = ../../../plugins
 INCLUDEPATH += ../../../../
 SOURCES += accountcreateeditplugin.cpp \
     formeditaccount.cpp \
+    investmentsettings.cpp \
     secondarycurrencies.cpp
 
 HEADERS += accountcreateeditplugin.h \
     formeditaccount.h \
     accountedittab.h \
+    investmentsettings.h \
     secondarycurrencies.h
 
 OBJECTS_DIR = build/obj

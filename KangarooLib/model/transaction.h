@@ -71,6 +71,12 @@ class Transaction : public IStored {
           currency(_currency),
           memo(_memo) {}
 
+    bool equals(const Split& other) const {
+      return amount == other.amount && idAccount == other.idAccount &&
+             currency == other.currency && memo == other.memo &&
+             userData == other.userData;
+    }
+
     Split() : idAccount(Constants::NO_ID) {}
 
     KLib::Amount amount;

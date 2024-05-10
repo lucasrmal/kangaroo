@@ -13,6 +13,7 @@ class AccountActions {
   static bool reopenAccount(KLib::Account* _account);
   static bool removeAccount(KLib::Account* _account);
   static bool reassignAllTransactions(KLib::Account* _account);
+  static bool moveAllChildren(KLib::Account* _account);
 };
 
 #endif  // ACCOUNTACTIONS_H

@@ -135,9 +135,8 @@ void TabInterfacePlugin::lookupAccount() {
   int selected_account_id = Constants::NO_ID;
   if (!KLib::FormSelectAccount::selectAccount(
           TabInterface::instance(), &selected_account_id, tr("Lookup Account"),
-          KLib::Flag_None,
-          KLib::AccountTypeFlags::Flag_All &
-              ~KLib::AccountTypeFlags::Flag_Trading)) {
+          {.typeFlags = KLib::AccountTypeFlags::Flag_All &
+                        ~KLib::AccountTypeFlags::Flag_Trading})) {
     return;
   }
 

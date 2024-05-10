@@ -804,8 +804,8 @@ void LedgerWidget::createBasicActions() {
 
     int new_account_id = Constants::NO_ID;
     if (!FormSelectAccount::selectAccount(
-            this, &new_account_id, tr("Select New Account"), Flag_None,
-            AccountTypeFlags::Flag_AllButInvTrad)) {
+            this, &new_account_id, tr("Select New Account"),
+            {.typeFlags = AccountTypeFlags::Flag_AllButInvTrad})) {
       return;
     }
 

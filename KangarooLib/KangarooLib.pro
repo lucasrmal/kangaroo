@@ -5,7 +5,7 @@
 # You will need the libgl1-mesa-dev and zlib1g-dev
 # packages in order to build this library.
 #-------------------------------------------------
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++20
 
 TARGET = kangaroo
 

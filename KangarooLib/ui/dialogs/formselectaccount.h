@@ -16,8 +16,8 @@ class FormSelectAccount : public CAMSEGDialog {
   /**
     Creates a new account selection dialog.
   */
-  explicit FormSelectAccount(int account_selection_flags,
-                             int account_type_flags, QWidget* parent = NULL);
+  explicit FormSelectAccount(AccountSelectorParams selectorParams,
+                             QWidget* parent = nullptr);
 
   /**
     Convenience function that acts as a wrapper over the class. It's the
@@ -27,8 +27,7 @@ class FormSelectAccount : public CAMSEGDialog {
   */
   static bool selectAccount(QWidget* parent, int* selected_account_id,
                             const QString& title,
-                            int account_selection_flags = Flag_None,
-                            int account_type_flags = AccountTypeFlags::Flag_All,
+                            AccountSelectorParams selectorParams,
                             int initial_account_id = Constants::NO_ID);
 
  public slots:
@@ -37,8 +36,6 @@ class FormSelectAccount : public CAMSEGDialog {
  private:
   void loadUI();
 
-  const int account_selection_flags_;
-  const int account_type_flags_;
   AccountSelector* account_selector_;
 };
 

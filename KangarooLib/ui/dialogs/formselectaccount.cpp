@@ -7,21 +7,19 @@
 
 namespace KLib {
 
-FormSelectAccount::FormSelectAccount(int account_selection_flags,
-                                     int account_type_flags, QWidget* parent)
+FormSelectAccount::FormSelectAccount(AccountSelectorParams selectorParams,
+                                     QWidget* parent)
     : CAMSEGDialog(DialogWithPicture, OkCancelButtons, parent),
-      account_selection_flags_(account_selection_flags),
-      account_type_flags_(account_type_flags) {
+      account_selector_(new AccountSelector(std::move(selectorParams), this)) {
   loadUI();
 }
 
 bool FormSelectAccount::selectAccount(QWidget* parent, int* selected_account_id,
                                       const QString& title,
-                                      int account_selection_flags,
-                                      int account_type_flags,
+                                      AccountSelectorParams selectorParams,
                                       int initial_account_id) {
   bool returnValue = false;
-  FormSelectAccount dialog(account_selection_flags, account_type_flags, parent);
+  FormSelectAccount dialog(std::move(selectorParams), parent);
   dialog.setBothTitles(title);
 
   if (initial_account_id != Constants::NO_ID) {
@@ -53,9 +51,6 @@ void FormSelectAccount::accept() {
 void FormSelectAccount::loadUI() {
   setBothTitles(tr("Select Account"));
   setPicture(Core::pixmap("bank-account"));
-
-  account_selector_ = new AccountSelector(
-      account_selection_flags_, account_type_flags_, Constants::NO_ID, this);
 
   QVBoxLayout* mainLayout = new QVBoxLayout();
   mainLayout->addWidget(account_selector_);

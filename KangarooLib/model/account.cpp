@@ -403,6 +403,13 @@ bool Account::removeChild(int _id, const Key& _k) {
         }
       }
 
+      // Remove all dividend accounts pointing to this
+      for (Account* a : m_accounts) {
+        if (a->idDefaultDividendAccount() == _id) {
+          a->setIdDefaultDividendAccount(Constants::NO_ID);
+        }
+      }
+
       LedgerManager::instance()->removeAccount(del);
 
       emit accountRemoved(del);
@@ -431,10 +438,19 @@ bool Account::canBeRemoved() const {
             !m_customTypes[m_type]->deleteValidation(this, err)));
 }
 
-QSet<QString> Account::allCurrencies() const {
-  QSet<QString> cur = m_secondaryCurrencies;
-  cur.insert(m_mainCurrency);
-  return cur;
+std::vector<QString> Account::allCurrencies() const {
+  std::vector<QString> currencies = {m_mainCurrency};
+  for (auto it = m_secondaryCurrencies.begin();
+       it != m_secondaryCurrencies.end(); ++it) {
+    if (*it == m_mainCurrency) continue;
+    currencies.push_back(*it);
+  }
+  return currencies;
+}
+
+bool Account::supportsCurrency(const QString& _currency) const {
+  return _currency == m_mainCurrency ||
+         m_secondaryCurrencies.contains(_currency);
 }
 
 void Account::setType(int _type) {
@@ -464,6 +480,10 @@ void Account::setType(int _type) {
     }
 
     m_type = _type;
+
+    if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE) {
+      m_idDefaultDividendAccount = Constants::NO_ID;
+    }
 
     if (!onHoldToModify()) emit accountModified(this);
   } else {
@@ -708,7 +728,8 @@ void Account::setIdSecurity(int _id) {
 void Account::setIdDefaultDividendAccount(int _id) {
   if (_id == m_idDefaultDividendAccount) return;
 
-  if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE) {
+  if (m_type != AccountType::INVESTMENT && m_type != AccountType::BROKERAGE &&
+      _id != Constants::NO_ID) {
     ModelException::throwException(tr("Cannot set the default dividend account "
                                       "of a non-investment account."),
                                    this);
@@ -755,6 +776,27 @@ KLib::Amount Account::balanceBetween(const QDate& _start,
   } else {
     return 0;
   }
+}
+
+KLib::Amount Account::brokerageValueToday() const {
+  if (type() != AccountType::BROKERAGE) {
+    return 0;
+  }
+
+  Amount total =
+      balanceBetween(QDate(), QDate::currentDate()) *
+      PriceManager::instance()->rate(m_mainCurrency, m_topLevel->mainCurrency(),
+                                     QDate::currentDate());
+
+  for (Account* c : m_children) {
+    if (c->type() == AccountType::INVESTMENT) {
+      total += c->balanceBetween(QDate(), QDate::currentDate()) *
+               PriceManager::instance()->rate(c->m_idSecurity,
+                                              m_topLevel->mainCurrency(),
+                                              QDate::currentDate());
+    }
+  }
+  return total;
 }
 
 KLib::Amount Account::treeValueBetween(const QDate& _start,

@@ -272,7 +272,7 @@ bool Transaction::splitsBalance(const QList<Transaction::Split>& _splits) {
 
     // Transaction currency is only for currency transactions.
     if (!a->mainCurrency().isEmpty()) {
-      if (s.currency.isEmpty() || !a->allCurrencies().contains(s.currency))
+      if (s.currency.isEmpty() || !a->supportsCurrency(s.currency))
         return false;
 
       totals[s.currency] += s.amount;

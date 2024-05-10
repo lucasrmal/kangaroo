@@ -224,7 +224,8 @@ class Account : public IStored {
   const QSet<QString>& secondaryCurrencies() const {
     return m_secondaryCurrencies;
   }
-  QSet<QString> allCurrencies() const;
+  std::vector<QString> allCurrencies() const;
+  bool supportsCurrency(const QString& _currency) const;
 
   void setType(int _type);
   void setName(const QString& _name);
@@ -243,6 +244,7 @@ class Account : public IStored {
 
   Q_INVOKABLE KLib::Amount balanceToday() const;
   Q_INVOKABLE KLib::Amount treeValueToday() const;
+  Q_INVOKABLE KLib::Amount brokerageValueToday() const;
 
   Q_INVOKABLE KLib::Amount balance() const;
   Q_INVOKABLE KLib::Amount treeValue() const;

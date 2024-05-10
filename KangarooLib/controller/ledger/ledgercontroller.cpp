@@ -535,8 +535,8 @@ QVariant LedgerController::cacheData(int _column, int _cacheRow, int _row,
         Account::getTopLevel()->getPath(idAccount, accountHeightDisplayed());
 
     Account* a = Account::getTopLevel()->account(idAccount);
-    if (account()->allCurrencies().count() > 1 && a &&
-        a->allCurrencies().count() > 1) {
+    if (account()->allCurrencies().size() > 1 && a &&
+        a->allCurrencies().size() > 1) {
       return QString("%1 (%2)").arg(path).arg(currency);
     } else {
       return path;
@@ -636,7 +636,7 @@ QVariant LedgerController::cacheData(int _column, int _cacheRow, int _row,
 
 QString LedgerController::formatCurrency(const Amount& _amount,
                                          const QString& _currency) const {
-  if (account()->allCurrencies().count() > 1)  // Show currency signs
+  if (account()->allCurrencies().size() > 1)  // Show currency signs
   {
     try {
       return CurrencyManager::instance()->get(_currency)->formatAmount(_amount);
@@ -1119,8 +1119,8 @@ QVariant LedgerBuffer::data(int _column, int _row, bool _editRole,
         idAccount, _controller->accountHeightDisplayed());
 
     Account* a = Account::getTopLevel()->account(idAccount);
-    if (_controller->account()->allCurrencies().count() > 1 && a &&
-        a->allCurrencies().count() > 1) {
+    if (_controller->account()->allCurrencies().size() > 1 && a &&
+        a->allCurrencies().size() > 1) {
       return QString("%1 (%2)").arg(path, currency);
     } else {
       return path;
@@ -1170,10 +1170,9 @@ QVariant LedgerBuffer::data(int _column, int _row, bool _editRole,
                                          splits[_row].currency);
     }
   } else if (!splits.count() && _row == 0) {
-    QString cur =
-        _controller->account()->allCurrencies().contains(transferCurrency)
-            ? transferCurrency
-            : _controller->account()->mainCurrency();
+    QString cur = _controller->account()->supportsCurrency(transferCurrency)
+                      ? transferCurrency
+                      : _controller->account()->mainCurrency();
     if (_column == _controller->col_transfer()) {
       if (!_editRole) {
         return accountDisplay(idTransfer, transferCurrency);
@@ -1392,7 +1391,7 @@ QList<Transaction::Split> LedgerBuffer::splitsForSaving(
     // to the other account's currency. If match is found, then no conversion.
     // Otherwise, convert from main currency to other account's currency
     if (idTransfer != Constants::NO_ID &&
-        !_controller->account()->allCurrencies().contains(transferCurrency)) {
+        !_controller->account()->supportsCurrency(transferCurrency)) {
       QString from = _controller->account()->mainCurrency();
       QString to = transferCurrency;
 
@@ -1884,12 +1883,14 @@ QWidget* LedgerWidgetDelegate::createEditor(QWidget* _parent,
     const Account* a =
         static_cast<const LedgerController*>(_index.model())->account();
 
-    int displayFlags =
-        a->allCurrencies().count() > 1 ? Flag_MultipleCurrencies : Flag_None;
     setCurrentEditor(new AccountSelector(
-        displayFlags,
-        AccountTypeFlags::Flag_All & ~AccountTypeFlags::Flag_Investment,
-        a->id(), _parent));
+        {.selectorFlags = a->allCurrencies().size() > 1
+                              ? AccountSelectorFlags::Flag_MultipleCurrencies
+                              : AccountSelectorFlags::Flag_Default,
+         .typeFlags =
+             AccountTypeFlags::Flag_All & ~AccountTypeFlags::Flag_Investment,
+         .idExcludeAccount = a->id()},
+        _parent));
   } else if (_index.column() == m_controller->col_debit() ||
              _index.column() == m_controller->col_credit()) {
     AmountEdit* amtEdit = new AmountEdit(2, _parent);
