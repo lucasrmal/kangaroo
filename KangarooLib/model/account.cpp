@@ -778,6 +778,27 @@ KLib::Amount Account::balanceBetween(const QDate& _start,
   }
 }
 
+KLib::Amount Account::brokerageValueToday() const {
+  if (type() != AccountType::BROKERAGE) {
+    return 0;
+  }
+
+  Amount total =
+      balanceBetween(QDate(), QDate::currentDate()) *
+      PriceManager::instance()->rate(m_mainCurrency, m_topLevel->mainCurrency(),
+                                     QDate::currentDate());
+
+  for (Account* c : m_children) {
+    if (c->type() == AccountType::INVESTMENT) {
+      total += c->balanceBetween(QDate(), QDate::currentDate()) *
+               PriceManager::instance()->rate(c->m_idSecurity,
+                                              m_topLevel->mainCurrency(),
+                                              QDate::currentDate());
+    }
+  }
+  return total;
+}
+
 KLib::Amount Account::treeValueBetween(const QDate& _start,
                                        const QDate& _end) const {
   Amount total = 0;
