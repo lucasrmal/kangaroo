@@ -171,7 +171,8 @@ QVariant AccountController::data(const QModelIndex& index, int role) const {
       f.setStrikeOut(true);
       return f;
     } else if (account->isPlaceholder() ||
-               account->type() == AccountType::BROKERAGE) {
+               (account->type() == AccountType::BROKERAGE &&
+                index.column() != AccountColumn::BALANCE_CURRENT)) {
       QFont f;
       f.setBold(true);
       return f;
